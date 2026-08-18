@@ -173,10 +173,19 @@
         border-color: #3f3f46;
         background: rgb(255 255 255 / 0.03);
       }
-      .hero img {
+      .hero img,
+      .hero video {
         width: 280px;
         max-width: 42vw;
         display: block;
+      }
+      .hero video {
+        border: 9px solid #2c2c32;
+        border-radius: 2.4rem;
+        background: #000;
+        box-shadow:
+          0 0 0 1px rgb(255 255 255 / 0.08),
+          0 30px 60px -18px rgb(0 0 0 / 0.75);
       }
       section {
         padding: 3.5rem 0;
@@ -346,11 +355,11 @@
       <div class="hero">
         <div>
           <span class="eyebrow">Single binary · no dependencies</span>
-          <h1>Your real Antigravity,<br /><em>on your phone.</em></h1>
+          <h1>Antigravity,<br /><em>on your phone.</em></h1>
           <p class="lede">
-            Antigravity's desktop app already ships a full web IDE — it just only
-            listens on <code>127.0.0.1</code>. This opens that door, behind a
-            password, with a QR code that signs your phone in without typing.
+            The Antigravity desktop app already contains a full web IDE. It just
+            only listens on <code>127.0.0.1</code>. This puts a password in front
+            of it and forwards it to your devices.
           </p>
           <div class="cta">
             <a class="btn primary" href="#start">Install in one line</a>
@@ -359,7 +368,9 @@
             </a>
           </div>
         </div>
-        <img src="assets/hero.png" alt="Antigravity running in a phone browser" />
+        <video autoplay muted loop playsinline poster="assets/hero.png">
+          <source src="assets/demo.mp4" type="video/mp4" />
+        </video>
       </div>
 
       <section id="start">
