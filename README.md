@@ -10,32 +10,27 @@
 
 <img src="docs/assets/demo.gif" width="300" alt="Asking an agent for the server state from a phone" />
 
-<sub>Antigravity in mobile Safari, running a shell command on a server.</sub>
-
 [한국어](README.ko.md) · [中文](README.zh-CN.md) · [日本語](README.ja.md) · [Português](README.pt-BR.md) · [Español](README.es.md)
 
 </div>
 
-## What this is
+## What it is
 
-The Antigravity desktop app ships a binary called `language_server`. It does the
-actual work of talking to Google, and with `--standalone` it also serves the whole
-Antigravity UI as a web app. It only listens on `127.0.0.1`, so nothing but the
-desktop app can reach it.
+The Antigravity desktop app ships a binary called `language_server`. It's what
+talks to Google, and with `--standalone` it also serves the whole Antigravity UI as
+a web app. It only listens on `127.0.0.1`.
 
-`agy-remote` puts a password in front of that server and forwards it to your
-network. It also rewrites a few strings in the JS bundle as it passes through,
-because a desktop IDE in a phone browser has some rough edges.
+`agy-remote` puts a password in front of it and forwards it to your network. It
+also rewrites a few strings in the JS bundle on the way through, since a desktop
+IDE in a phone browser has some rough edges.
 
-There are already a dozen projects for using Antigravity from a phone, and they all
-build a UI: their own chat panel, or a screen mirror over CDP. This one serves
-Antigravity's own instead. The terminal works, the file tree works, artifacts and
-the browser agent work, and new Google features show up on their own. I didn't
-write any of it and I don't have to keep up with it.
+Other projects that do this build their own UI, or mirror the screen over CDP. This
+one serves Antigravity's own, so the terminal, file tree, artifacts and browser
+agent all work, and new Google features show up on their own.
 
-The tradeoff is that patching a minified bundle is fragile. An Antigravity update
-can break a patch. `agy-remote` checks every patch on startup and says which ones
-stopped matching.
+The catch: patching a minified bundle is fragile. An Antigravity update can break a
+patch. `agy-remote` checks all of them at startup and tells you which stopped
+matching.
 
 ## Install
 
@@ -49,49 +44,45 @@ curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/sc
 irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
 ```
 
-That installs the binary and starts it. A control panel opens in your browser with
-a QR code. Scan it and you're in. There's no password to type, because the code
-carries a one-time token good for ten minutes.
+It installs and starts. A control panel opens with a QR code. Scan it and you're
+in, no password to type. The code holds a one-time token good for ten minutes.
 
 <div align="center">
 <img src="docs/assets/control-panel.png" width="320" alt="Control panel" />
 </div>
 
-Antigravity doesn't need to be open first. If it isn't running, `agy-remote` starts
-it, turns on remote control in the settings, waits for the language server, and
-works out which of its ports serves the UI.
+Antigravity doesn't need to be open first. If it isn't, `agy-remote` starts it,
+turns on remote control, waits for the language server, and works out which of its
+ports serves the UI.
 
-On the phone, tap Share and *Add to Home Screen*. That gives you a fullscreen app
-with the Antigravity icon and no browser bar, which is what the screenshots here
-show.
+On the phone use Share → *Add to Home Screen*. You get the Antigravity icon and a
+fullscreen app with no browser bar.
 
-### The security warnings
+The binaries aren't code-signed, so downloading an archive in a browser gets it
+quarantined. macOS: right-click, **Open**, **Open** again. Windows: **More info** →
+**Run anyway**. The install commands above use `curl`, which doesn't set the
+quarantine flag, so they skip all of that.
 
-The binaries aren't code-signed, since Apple and Microsoft both charge yearly for
-that. If you download an archive in a browser, the OS quarantines it:
+## On a server
 
-- macOS says the developer can't be verified. Right-click the file, **Open**, then
-  **Open** again. Or run `xattr -d com.apple.quarantine agy-remote`.
-- Windows shows SmartScreen. **More info** → **Run anyway**.
-
-`curl` and `Invoke-WebRequest` don't set the quarantine flag, so the install
-commands above avoid all of this.
-
-## Putting it on a server
-
-On a Linux box this becomes an Antigravity that keeps working with your laptop
-closed. A cheap VPS is enough. Mine is an Oracle free-tier ARM instance.
+Put it on a Linux box and Antigravity keeps working with your laptop closed. A
+cheap VPS is enough. Mine is a free Oracle ARM instance.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
 ```
 
-It asks for a domain and a workspace folder, downloads the official Antigravity
-build from Google's `storage.googleapis.com`, and extracts just the 165 MB
+It asks for a domain and a workspace folder, pulls the official Antigravity build
+from Google's `storage.googleapis.com`, and takes out just the 165 MB
 `language_server`. No Google binary is redistributed here. Then it writes a systemd
-unit, configures Caddy for automatic HTTPS, and generates a password.
+unit, sets up Caddy for HTTPS, and makes a password.
 
-One step can't be automated. Antigravity signs in through an OAuth callback on
+Since it's the same web UI, a laptop browser works too, and it looks and behaves
+like the desktop app. Conversations, workspaces and running agents live on the
+server, so you can start something on your phone on the train and keep going on a
+desktop when you get in. Nothing syncs because there's only one instance.
+
+One step isn't automatic. Antigravity signs in through an OAuth callback on
 `localhost`, which a remote server can't receive. Copy the token from a machine
 where you already use the desktop app:
 
@@ -99,25 +90,26 @@ where you already use the desktop app:
 scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 ```
 
-`agy-remote` prints that command for you when the token is missing.
+`agy-remote` prints that command when the token is missing.
 
 ## What gets patched
 
-Twelve patches, each with a description in
+Thirteen patches, each described in
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
-reports which ones applied.
+says which applied.
 
 | Problem | Patch |
 | --- | --- |
 | The bundle calls `https://127.0.0.1:<port>`, which from a phone is the phone | Use the browser's origin |
-| Enter sends the message mid-sentence | Enter is a newline on touch devices, Cmd/Ctrl+Enter sends |
-| The iOS home bar covers the composer | Respect `safe-area-inset-bottom`, drop the gap while the keyboard is up |
+| Enter sends mid-sentence | On touch, Enter is a newline and Cmd/Ctrl+Enter sends |
+| The iOS home bar covers the composer | Respect `safe-area-inset-bottom`, drop the gap with the keyboard open |
 | Tapping a model picks medium and closes the menu | Tap opens the effort submenu |
-| A mic button that can't work, as standalone mode has no transcription | Hide it |
-| New projects start in `/` | Start in your configured workspace folder |
-| No app icon, 300 ms tap delay, browser chrome | Icon, instant taps, and a manifest for fullscreen Add to Home Screen |
+| "Enable Notifications" banner on the first reply | Skip it on touch devices |
+| A mic button that can't work, since standalone has no transcription | Hide it |
+| New projects start in `/` | Start in the workspace folder you set |
+| No icon, 300 ms tap delay, browser chrome | Icon, instant taps, manifest for fullscreen |
 
-For the UI untouched, use `agy-remote --no-mobile-patches`.
+`agy-remote --no-mobile-patches` leaves the UI alone.
 
 <div align="center">
 <table><tr>
@@ -129,31 +121,26 @@ For the UI untouched, use `agy-remote --no-mobile-patches`.
 
 ## Security
 
-Anyone who reaches Antigravity can read your files and run commands, so treat
-access as equivalent to a shell.
+Whoever gets in can read your files and run commands, so this is closer to shell
+access than to sharing a doc.
 
-- Passwords are hashed with PBKDF2-SHA256 at 200k iterations and never stored in
-  plaintext.
-- Session tokens are 256 random bits, and only their hashes are written to disk, so
-  a copied `sessions.json` is useless. `agy-remote sessions revoke` signs out
-  everything.
-- Login is limited to five failures per IP per five minutes, then a lockout that
-  doubles up to 30 minutes. A global limiter covers distributed attempts. The
-  lockout also applies to the correct password.
-- Cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` when the request arrived
-  over HTTPS.
-- The control panel with the QR code and shutdown button listens on loopback only,
-  on a separate port. It is never exposed to the network.
+- Passwords go through PBKDF2-SHA256 at 200k iterations. Nothing is stored in plain
+  text.
+- Session tokens are 256 random bits and only hashes hit the disk, so a copied
+  `sessions.json` is useless.
+- Five failed logins per IP per five minutes, then a lockout doubling to 30 minutes.
+  It applies to the right password too.
+- The control panel, where the QR code and shutdown button live, listens on loopback
+  on its own port. It never reaches the network.
 
-Behind a reverse proxy, name the peers you trust, otherwise forwarded headers are
-ignored:
+Behind a reverse proxy, say which peers you trust or forwarded headers get ignored:
 
 ```bash
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
-[SECURITY.md](SECURITY.md) covers the rest. In short: put the host on Tailscale if
-you can, and use HTTPS if you can't.
+Rest is in [SECURITY.md](SECURITY.md). Use Tailscale if you can and HTTPS if you
+can't.
 
 ## Commands
 
@@ -166,45 +153,7 @@ agy-remote passwd [password]   set the password
 agy-remote sessions [revoke]   list or sign out devices
 ```
 
-Useful flags: `--port`, `--public-url`, `--workspace-root`, `--trusted-proxies`,
-`--session-days`, `--no-mobile-patches`, `--language-server`. Each one has an
-`AGY_*` environment variable, and `agy-remote help` lists them.
-
-<details>
-<summary>What <code>doctor</code> prints</summary>
-
-```
-  Antigravity Remote v0.1.0
-
-  ✓ Data directory /Users/you/.agy-remote
-  ✓ Access password is set
-  ✓ 2 device(s) signed in
-  ✓ Remote control is enabled in Antigravity settings
-  ✓ language_server found at /Applications/Antigravity.app/Contents/Resources/bin/language_server
-  ✓ Language server running (pid 62348, port 52856)
-  ✓ CSRF token is present
-  ✓ patch base-url-origin
-  ✓ patch skip-onboarding
-  ✓ patch mobile-enter-newline
-  ✓ patch model-effort-submenu
-  ✓ patch hide-mic-button
-  – patch folder-picker-initial-path (disabled)
-  ✓ patch app-icons
-  ✓ patch pwa-manifest
-  ✓ patch touch-action
-  ✓ patch safe-area-insets
-  ✓ patch keyboard-detect
-  ✓ patch cache-bust
-  ✓ Reachable on your network at http://192.168.1.20:8765
-  ✓ Port 8765 is free
-
-  ────────────────────────────────────────────────────
-  ✓ Everything looks good.
-```
-
-</details>
-
-## How it works
+`agy-remote help` lists the flags. Each has an `AGY_*` environment variable.
 
 ```
   phone                          your machine or server
@@ -219,54 +168,39 @@ Useful flags: `--port`, `--public-url`, `--workspace-root`, `--trusted-proxies`,
                                   Google CloudCode
 ```
 
-Prompts and code pass through as proxied bytes and go nowhere but the language
-server on the same host. Antigravity's own traffic to Google is unchanged.
+Prompts and code go to the language server on the same host and nowhere else.
 
 ## FAQ
 
-**Can I use the IDE or the CLI instead?**
-No, it needs the desktop app, the one called just "Antigravity". Only that runs
-`language_server --standalone`, the mode that serves the web UI. The CLI binary has
-the bundle compiled in but no flag to serve it.
+**Does the IDE or the CLI work?** No. It has to be the desktop app, the one called
+just "Antigravity", because only that runs `language_server --standalone`. The CLI
+has the bundle compiled in but no flag to serve it.
 
-**Will it survive Antigravity updates?**
-The proxy will. Individual patches may not. `base-url-origin` is the only one remote
-access needs, and the others are conveniences. Open an issue when one breaks.
+**Will it survive updates?** The proxy will, individual patches might not.
+`base-url-origin` is the only one remote access needs. File an issue when something
+breaks.
 
-**Does my code go anywhere?**
-No. The proxy and the language server both run on your machine.
+**Does my code leave the machine?** No. Proxy and language server both run locally.
 
-**Can two people use it?**
-Each device gets a session, but they share one Antigravity and one Google account.
-It's meant for your own devices, not a team.
+**Two people?** Each device gets a session, but they share one Antigravity and one
+Google account. It's for your devices, not a team.
 
-**Why is HTTP fine on a LAN but not on the internet?**
-Phone browsers reject self-signed certificates and you can't get a real one for
-`192.168.x.x`. On a trusted network that's an acceptable trade. On a public address
-it isn't, so use `--public-url` behind Caddy or a tunnel.
-
-## Building it
+## Building
 
 ```bash
 go test ./...
 go run ./cmd/agy-remote
 ```
 
-The part worth reading is [`internal/patches`](internal/patches). A patch is a
-struct with an anchor string, and adding one to `All()` is enough: the tests,
-`doctor`, the control panel and the cache key all read from that list.
+The interesting directory is [`internal/patches`](internal/patches). A patch is a
+struct with an anchor string; add one to `All()` and the tests, `doctor`, the
+control panel and the cache key pick it up.
 
-None of Antigravity's bundle is in this repo, so patches are tested at two levels.
-`patches_test.go` builds a synthetic document from the registry to test the engine.
-`live_test.go` fetches the real bundle from a running language server and asserts
-each anchor matches exactly once, skipping when nothing is running. Before a
-release, open the desktop app and run:
-
-```bash
-go test ./internal/patches -run Live -v
-```
+Antigravity's bundle isn't in this repo, so `patches_test.go` tests the engine
+against a synthetic document and `live_test.go` checks the anchors against a real
+running language server, skipping if there isn't one. Before tagging a release,
+open the desktop app and run `go test ./internal/patches -run Live -v`.
 
 ## License
 
-[Apache-2.0](LICENSE). Not a Google project and not affiliated with Google. See
-[DISCLAIMER.md](DISCLAIMER.md).
+[Apache-2.0](LICENSE). Not a Google project. See [DISCLAIMER.md](DISCLAIMER.md).

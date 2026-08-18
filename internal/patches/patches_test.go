@@ -85,6 +85,7 @@ func TestPatchedContentIsCorrect(t *testing.T) {
 		`window.matchMedia("(pointer:coarse)")`,
 		`var vz=function(){return null};var vzDisabled=(`,
 		`initialPath:b?b.fsPath:"/home/ubuntu/workspace",fetchDirectoryContents:`,
+		`var e=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService`,
 	}
 	for _, w := range want {
 		if !strings.Contains(body, w) {
@@ -108,7 +109,10 @@ func TestMobileUXDisabledSkipsMobilePatches(t *testing.T) {
 		byID[r.ID] = r
 	}
 
-	for _, id := range []string{"mobile-enter-newline", "hide-mic-button", "model-effort-submenu"} {
+	for _, id := range []string{
+		"mobile-enter-newline", "hide-mic-button", "model-effort-submenu",
+		"mobile-skip-notification-prompt",
+	} {
 		if got := byID[id].Status; got != StatusDisabled {
 			t.Errorf("%s: want disabled, got %s", id, got)
 		}

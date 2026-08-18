@@ -3,19 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Antigravity Remote — your real Antigravity, on your phone</title>
+    <title>Antigravity Remote — use Antigravity from your phone</title>
     <meta
       name="description"
-      content="One binary that serves Antigravity's own web UI to your phone, behind a password. Or self-host it on a server as your own cloud Antigravity."
+      content="One binary that serves the Antigravity desktop app's own web UI to your phone, behind a password. Or run it headless on a Linux server."
     />
     <meta name="theme-color" content="#0e0e11" />
     <link rel="icon" href="assets/favicon.ico" />
     <meta property="og:title" content="Antigravity Remote" />
     <meta
       property="og:description"
-      content="Your real Antigravity, on your phone. Not a clone."
+      content="Use the Antigravity desktop app from your phone."
     />
     <meta property="og:image" content="assets/hero.png" />
+    <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <style>
       *,
@@ -407,7 +408,13 @@ irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/i
         <h2>Or host it: your own cloud Antigravity</h2>
         <p>
           One command on any Linux box turns it into an always-on coding agent you
-          reach from anywhere — a $5 VPS, a home server, a free-tier ARM instance.
+          reach from anywhere: a $5 VPS, a home server, a free-tier ARM instance.
+        </p>
+        <p>
+          It is the same web UI, so a desktop browser works too and behaves like the
+          app. Conversations, workspaces and running agents live on the server, so you
+          can start something on your phone and pick it up at a desk. Nothing syncs,
+          because there is only one instance.
         </p>
         <pre><span class="c"># downloads the official Antigravity build from Google, sets up
 # systemd and automatic HTTPS with Caddy</span>
@@ -457,15 +464,15 @@ curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/sc
       <section>
         <h2>Built for thumbs</h2>
         <p>
-          A desktop IDE in a phone browser has sharp edges. Twelve named patches
-          sand them down, and every one is listed in the control panel.
+          A desktop IDE in a phone browser has sharp edges. Thirteen named patches
+          fix them, and each one is listed in the control panel.
         </p>
         <ul class="plain">
           <li>Enter inserts a newline; Cmd/Ctrl+Enter sends</li>
           <li>The composer and toasts stay clear of the iOS home bar</li>
           <li>Tapping a model opens its reasoning-effort submenu</li>
+          <li>No notification prompt, no tap delay, no dead mic button</li>
           <li>Add to Home Screen opens fullscreen, with the official icon</li>
-          <li>No tap delay, no dead mic button</li>
         </ul>
         <div class="shots">
           <figure class="shot">

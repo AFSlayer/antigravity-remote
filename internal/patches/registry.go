@@ -73,6 +73,20 @@ func All() []Patch {
 			Find:    `uz.displayName="GutterHoverCommentButton";var vz=(`,
 			Replace: `uz.displayName="GutterHoverCommentButton";var vz=function(){return null};var vzDisabled=(`,
 		},
+		// The prompt is an in-app banner shown once when notificationPermission is
+		// still "default". Making the "have we asked yet" flag read as true on
+		// touch devices skips it without touching the granted path, so a desktop
+		// browser can still turn notifications on.
+		{
+			ID:      "mobile-skip-notification-prompt",
+			Desc:    "Skip the Enable Notifications banner on touch devices",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `var e=!!this.storageService.get("didAskForNotificationPermission");`,
+			Replace: `var e=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService.get("didAskForNotificationPermission");`,
+		},
+
 		// Only the fallback is replaced: when a workspace is already open the
 		// picker keeps starting from it.
 		{
