@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#111113" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="agy-remote" content="login" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Antigravity</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem
+          max(1.5rem, env(safe-area-inset-bottom));
+        background:
+          radial-gradient(120% 80% at 50% -10%, #24242a 0%, transparent 60%), #111113;
+        color: #f4f4f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .card {
+        width: 100%;
+        min-width: 0;
+        max-width: 22rem;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 1.25rem;
+        padding: 2rem 1.75rem;
+        box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.6);
+        text-align: center;
+      }
+      .logo {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 0.9rem;
+        margin: 0 auto 1.25rem;
+        display: block;
+      }
+      h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        margin-top: 0.4rem;
+        font-size: 0.875rem;
+        color: #a1a1aa;
+      }
+      form {
+        margin-top: 1.75rem;
+        display: grid;
+        gap: 0.75rem;
+      }
+      .field {
+        position: relative;
+      }
+      input {
+        width: 100%;
+        height: 3rem;
+        padding: 0 3.5rem 0 1rem;
+        background: #0c0c0e;
+        border: 1px solid #3f3f46;
+        border-radius: 0.75rem;
+        color: #fafafa;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      input:focus {
+        border-color: #4f7cff;
+        box-shadow: 0 0 0 3px rgb(79 124 255 / 0.2);
+      }
+      .reveal {
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+        padding: 0.5rem;
+        background: none;
+        border: 0;
+        color: #71717a;
+        font-size: 0.8rem;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      button[type="submit"] {
+        height: 3rem;
+        border: 0;
+        border-radius: 0.75rem;
+        background: #4f7cff;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: background 0.15s, transform 0.1s;
+      }
+      button[type="submit"]:hover:not(:disabled) {
+        background: #3f6ae8;
+      }
+      button[type="submit"]:active:not(:disabled) {
+        transform: scale(0.985);
+      }
+      button[type="submit"]:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .error {
+        min-height: 1.1rem;
+        font-size: 0.8rem;
+        color: #f87171;
+      }
+      .hint {
+        margin-top: 1.5rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: #52525b;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <img class="logo" src="/apple-touch-icon.png" alt="" />
+      <h1>Antigravity</h1>
+      <p class="subtitle">Enter your access password</p>
+
+      <form id="form">
+        <div class="field">
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+            autofocus
+          />
+          <button type="button" class="reveal" id="reveal">Show</button>
+        </div>
+        <button type="submit" id="submit">Unlock</button>
+        <p class="error" id="error" role="alert"></p>
+      </form>
+
+      <p class="hint">
+        Tip: scan the QR code shown by <code>agy-remote</code> to sign in without typing.
+      </p>
+    </main>
+
+    <script>
+      const form = document.getElementById("form");
+      const password = document.getElementById("password");
+      const submit = document.getElementById("submit");
+      const error = document.getElementById("error");
+      const reveal = document.getElementById("reveal");
+
+      reveal.addEventListener("click", () => {
+        const shown = password.type === "text";
+        password.type = shown ? "password" : "text";
+        reveal.textContent = shown ? "Show" : "Hide";
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        error.textContent = "";
+        submit.disabled = true;
+        submit.textContent = "Checking…";
+
+        try {
+          const res = await fetch({{ .LoginAPIPath }}, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: password.value }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data.success) {
+            window.location.replace("/");
+            return;
+          }
+          error.textContent = data.error || "Incorrect password.";
+          password.select();
+        } catch {
+          error.textContent = "Could not reach the server.";
+        } finally {
+          submit.disabled = false;
+          submit.textContent = "Unlock";
+        }
+      });
+    </script>
+  </body>
+</html>

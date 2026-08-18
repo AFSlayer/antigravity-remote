@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111113" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>Antigravity Remote</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        min-height: 100vh;
+        padding: 2.5rem 1.25rem 3rem;
+        background:
+          radial-gradient(120% 60% at 50% -10%, #24242a 0%, transparent 55%), #111113;
+        color: #f4f4f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        width: 100%;
+        max-width: 30rem;
+        margin: 0 auto;
+        display: grid;
+        gap: 1rem;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.25rem;
+      }
+      header img {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.65rem;
+      }
+      header h1 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      header .meta {
+        font-size: 0.75rem;
+        color: #71717a;
+        margin-top: 0.1rem;
+      }
+      .badge {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+        background: rgb(34 197 94 / 0.12);
+        border: 1px solid rgb(34 197 94 / 0.3);
+        color: #4ade80;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .badge::before {
+        content: "";
+        width: 0.4rem;
+        height: 0.4rem;
+        border-radius: 999px;
+        background: currentColor;
+      }
+      .card {
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 1rem;
+        padding: 1.25rem;
+      }
+      .card h2 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #71717a;
+        margin-bottom: 0.9rem;
+      }
+      .qr-card {
+        text-align: center;
+        padding: 1.75rem 1.25rem 1.5rem;
+      }
+      .qr {
+        width: 13.5rem;
+        height: 13.5rem;
+        padding: 0.75rem;
+        background: #fff;
+        border-radius: 0.9rem;
+        image-rendering: pixelated;
+      }
+      .qr-title {
+        margin-top: 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .qr-sub {
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+        color: #a1a1aa;
+        line-height: 1.5;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem 0;
+        border-top: 1px solid #232326;
+        font-size: 0.875rem;
+      }
+      .row:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .row .label {
+        color: #a1a1aa;
+        flex: 0 0 auto;
+      }
+      .row .value {
+        margin-left: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85rem;
+        color: #e4e4e7;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .btn {
+        border: 1px solid #3f3f46;
+        background: #202024;
+        color: #e4e4e7;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: background 0.15s, border-color 0.15s;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: #27272b;
+        border-color: #52525b;
+      }
+      .btn.ghost {
+        background: none;
+      }
+      .btn.danger {
+        border-color: rgb(248 113 113 / 0.35);
+        color: #f87171;
+        background: rgb(248 113 113 / 0.06);
+      }
+      .btn.danger:hover {
+        background: rgb(248 113 113 / 0.12);
+        border-color: rgb(248 113 113 / 0.5);
+      }
+      .btn.block {
+        width: 100%;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+      .patch {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.5rem 0;
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+      .patch .mark {
+        flex: 0 0 1rem;
+        font-weight: 700;
+      }
+      .patch.ok .mark {
+        color: #4ade80;
+      }
+      .patch.off .mark {
+        color: #52525b;
+      }
+      .patch.bad .mark {
+        color: #f87171;
+      }
+      .patch .desc {
+        color: #d4d4d8;
+      }
+      .patch.off .desc {
+        color: #71717a;
+      }
+      .patch .id {
+        display: block;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.7rem;
+        color: #52525b;
+        margin-top: 0.1rem;
+      }
+      .notice {
+        margin-top: 0.75rem;
+        padding: 0.7rem 0.85rem;
+        border-radius: 0.6rem;
+        background: rgb(248 113 113 / 0.08);
+        border: 1px solid rgb(248 113 113 / 0.25);
+        color: #fca5a5;
+        font-size: 0.78rem;
+        line-height: 1.5;
+      }
+      .empty {
+        font-size: 0.82rem;
+        color: #71717a;
+      }
+      footer {
+        text-align: center;
+        font-size: 0.72rem;
+        color: #52525b;
+        line-height: 1.6;
+      }
+      footer a {
+        color: #71717a;
+      }
+      #toast {
+        position: fixed;
+        left: 50%;
+        bottom: 1.5rem;
+        transform: translate(-50%, 200%);
+        padding: 0.6rem 1rem;
+        border-radius: 999px;
+        background: #f4f4f5;
+        color: #18181b;
+        font-size: 0.8rem;
+        font-weight: 600;
+        opacity: 0;
+        visibility: hidden;
+        transition: transform 0.25s ease, opacity 0.2s ease, visibility 0.2s;
+        pointer-events: none;
+      }
+      #toast.show {
+        transform: translate(-50%, 0);
+        opacity: 1;
+        visibility: visible;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <img src="/apple-touch-icon.png" alt="" />
+        <div>
+          <h1>Antigravity Remote</h1>
+          <div class="meta">{{ .Mode }} &middot; port {{ .Port }} &middot; v{{ .Version }}</div>
+        </div>
+        <span class="badge">Running</span>
+      </header>
+
+      <section class="card qr-card">
+        <img class="qr" id="qr" src="data:image/png;base64,{{ .QR }}" alt="Login QR code" />
+        <p class="qr-title">Scan to open on your phone</p>
+        <p class="qr-sub">
+          Signs you in automatically. Single use, valid for {{ .EnrollMinutes }} minutes.
+        </p>
+        <p style="margin-top: 1rem">
+          <button class="btn ghost" id="new-qr">New code</button>
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Addresses</h2>
+        {{ range .Endpoints }}
+        <div class="row">
+          <span class="label">{{ .Label }}</span>
+          <span class="value">{{ .URL }}</span>
+          <button class="btn" data-copy="{{ .URL }}">Copy</button>
+        </div>
+        {{ end }}
+      </section>
+
+      <section class="card">
+        <h2>Access</h2>
+        <div class="row">
+          <span class="label">Password</span>
+          <span class="value" id="password">••••••••••••</span>
+          <button class="btn" id="show-password">Show</button>
+        </div>
+        <div class="row">
+          <span class="label">Signed-in devices</span>
+          <span class="value" id="session-count">{{ .Sessions }}</span>
+          <button class="btn danger" id="revoke">Sign out all</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Mobile patches</h2>
+        {{ range .Patches }}
+        <div class="patch {{ .Class }}">
+          <span class="mark">{{ .Mark }}</span>
+          <span class="desc">{{ .Desc }}<span class="id">{{ .ID }}</span></span>
+        </div>
+        {{ else }}
+        <p class="empty">Waiting for the first page load…</p>
+        {{ end }}
+        {{ if .PatchWarning }}
+        <p class="notice">{{ .PatchWarning }}</p>
+        {{ end }}
+      </section>
+
+      <button class="btn danger block" id="stop">Stop server</button>
+
+      <footer>
+        {{ .NetworkNote }}<br />
+        <a href="https://github.com/AFSlayer/antigravity-remote" target="_blank" rel="noreferrer"
+          >github.com/AFSlayer/antigravity-remote</a
+        >
+      </footer>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+      const toastEl = document.getElementById("toast");
+      let toastTimer;
+
+      function toast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+      }
+
+      async function copy(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("Copied");
+        } catch {
+          toast("Copy failed");
+        }
+      }
+
+      async function post(path) {
+        const res = await fetch(path, { method: "POST" });
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json();
+      }
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", () => copy(button.dataset.copy));
+      });
+
+      document.getElementById("new-qr").addEventListener("click", async () => {
+        try {
+          const data = await post("/api/qr");
+          document.getElementById("qr").src = "data:image/png;base64," + data.qr;
+          toast("New code ready");
+        } catch {
+          toast("Could not refresh");
+        }
+      });
+
+      const passwordEl = document.getElementById("password");
+      const showButton = document.getElementById("show-password");
+      let plaintext = null;
+
+      function showPassword(value) {
+        plaintext = value;
+        passwordEl.textContent = value;
+        showButton.textContent = "Copy";
+      }
+
+      showButton.addEventListener("click", async () => {
+        if (plaintext) {
+          copy(plaintext);
+          return;
+        }
+
+        try {
+          const revealed = await post("/api/password/reveal");
+          if (revealed.password) {
+            showPassword(revealed.password);
+            return;
+          }
+        } catch {
+          toast("Could not read password");
+          return;
+        }
+
+        const ok = confirm(
+          "Your password is stored hashed, so it cannot be shown.\n\nGenerate a new password now?"
+        );
+        if (!ok) return;
+
+        try {
+          const reset = await post("/api/password/reset");
+          showPassword(reset.password);
+          toast("New password generated");
+        } catch {
+          toast("Could not reset password");
+        }
+      });
+
+      document.getElementById("revoke").addEventListener("click", async () => {
+        if (!confirm("Sign out every device? They will need the password again.")) return;
+        try {
+          const data = await post("/api/sessions/revoke");
+          document.getElementById("session-count").textContent = "0";
+          toast(data.revoked + " device(s) signed out");
+        } catch {
+          toast("Could not sign out devices");
+        }
+      });
+
+      document.getElementById("stop").addEventListener("click", async () => {
+        if (!confirm("Stop the server? Connected devices will lose access.")) return;
+        try {
+          await post("/api/shutdown");
+          document.querySelector(".wrap").innerHTML =
+            '<section class="card" style="text-align:center"><h1 style="font-size:1.05rem">Server stopped</h1>' +
+            '<p class="qr-sub" style="margin-top:.5rem">You can close this tab.</p></section>';
+        } catch {
+          toast("Could not stop the server");
+        }
+      });
+    </script>
+  </body>
+</html>

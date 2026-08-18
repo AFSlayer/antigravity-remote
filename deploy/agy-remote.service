@@ -1,0 +1,18 @@
+[Unit]
+Description=Antigravity Remote
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Environment=HOME=/home/ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/usr/local/bin/agy-remote serve
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

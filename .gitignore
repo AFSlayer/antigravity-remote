@@ -1,0 +1,9 @@
+/agy-remote
+/dist/
+*.exe
+*.test
+*.out
+.DS_Store
+
+# Private maintenance notes, not part of the project
+/.agents/
