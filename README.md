@@ -25,8 +25,8 @@ also rewrites a few strings in the JS bundle on the way through, since a desktop
 IDE in a phone browser has some rough edges.
 
 Other projects that do this build their own UI, or mirror the screen over CDP. This
-one serves Antigravity's own, so the terminal, file tree, artifacts and browser
-agent all work, and new Google features show up on their own.
+one serves Antigravity's own, so the terminal, file tree, artifacts and browser agent
+all work, and new Google features appear without any work here.
 
 The catch: patching a minified bundle is fragile. An Antigravity update can break a
 patch. `agy-remote` checks all of them at startup and tells you which stopped
@@ -65,8 +65,8 @@ quarantine flag, so they skip all of that.
 
 ## On a server
 
-Put it on a Linux box and Antigravity keeps working with your laptop closed. A
-cheap VPS is enough. Mine is a free Oracle ARM instance.
+On a Linux box, Antigravity keeps working with your laptop closed. A cheap VPS or a
+free-tier ARM instance is enough.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash

@@ -25,7 +25,7 @@ Antigravity 데스크톱 앱에는 `language_server`라는 바이너리가 들�
 
 같은 일을 하는 프로젝트들은 자체 UI를 만들거나 CDP로 화면을 미러링한다. 이건
 Antigravity 자기 UI를 서브한다. 그래서 터미널, 파일 트리, artifacts, 브라우저
-에이전트가 다 되고, Google이 뭘 추가하면 그냥 따라온다.
+에이전트가 다 되고, Google이 기능을 추가해도 이쪽에서 할 일이 없다.
 
 단점은 압축된 번들에 패치를 거는 게 깨지기 쉽다는 것이다. Antigravity가 업데이트되면
 패치가 안 맞을 수 있다. `agy-remote`는 시작할 때 전부 검사해서 안 맞는 걸 알려준다.
@@ -61,8 +61,8 @@ Antigravity를 미리 켜둘 필요는 없다. 안 켜져 있으면 `agy-remote`
 
 ## 서버에 올리면
 
-리눅스 서버에 올려두면 노트북을 닫아도 Antigravity가 계속 돌아간다. 싼 VPS로 충분하다.
-내 건 Oracle 무료 ARM 인스턴스다.
+리눅스 서버에 올려두면 노트북을 닫아도 Antigravity가 계속 돌아간다. 싼 VPS나 무료 등급
+ARM 인스턴스로 충분하다.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash

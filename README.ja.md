@@ -19,7 +19,7 @@ Antigravity デスクトップ版には `language_server` というバイナリ�
 通信しているのはこれで、`--standalone` を付けると Antigravity の UI 全体を web アプリと
 しても配信する。listen するのは `127.0.0.1` だけだ。
 
-`agy-remote` はその手前にパスワードを置いて、自分のネットワークに転送する。通り道で JS
+`agy-remote` はその手前にパスワードを置いて、手元のネットワークに転送する。通り道で JS
 バンドルの文字列もいくつか書き換える。デスクトップ用 IDE をスマホのブラウザで使うと
 引っかかる箇所があるからだ。
 
@@ -62,8 +62,8 @@ Antigravity を先に開く必要はない。起動していなければ `agy-re
 
 ## サーバーに置く
 
-Linux マシンに置けば、ノートを閉じても Antigravity は動き続ける。安い VPS で足りる。
-自分のは Oracle の無料 ARM インスタンスだ。
+Linux マシンに置けば、ノートを閉じても Antigravity は動き続ける。安い VPS や無料枠の
+ARM インスタンスで足りる。
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
@@ -132,7 +132,7 @@ agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.
 ## コマンド
 
 ```
-agy-remote                     デスクトップ版を自分のネットワークに共有
+agy-remote                     デスクトップ版を手元のネットワークに共有
 agy-remote serve               サーバーでヘッドレス実行
 agy-remote doctor              全体を点検して問題を出力
 agy-remote config [flags]      オプションを config.json に保存

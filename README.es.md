@@ -65,8 +65,8 @@ usan `curl`, que no marca la cuarentena.
 
 ## En un servidor
 
-En una máquina Linux, Antigravity sigue trabajando con el portátil cerrado. Un VPS
-barato basta. El mío es una instancia ARM gratuita de Oracle.
+En una máquina Linux, Antigravity sigue trabajando con el portátil cerrado. Basta un
+VPS barato o una instancia ARM de nivel gratuito.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash

@@ -58,8 +58,7 @@ server 就绪，再找出哪个端口在提供界面。
 
 ## 部署到服务器
 
-放到 Linux 机器上，合上笔记本 Antigravity 也照样跑。便宜 VPS 就够，我用的是 Oracle 免费
-ARM 实例。
+放到 Linux 机器上，合上笔记本 Antigravity 也照样跑。便宜的 VPS 或免费档的 ARM 实例就够。
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash

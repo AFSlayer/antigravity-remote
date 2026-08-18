@@ -66,7 +66,7 @@ Windows: **Mais informações** → **Executar assim mesmo**. Os comandos acima 
 ## Num servidor
 
 Numa máquina Linux o Antigravity continua trabalhando com o notebook fechado. Uma VPS
-barata resolve. A minha é uma instância ARM gratuita da Oracle.
+barata ou uma instância ARM de nível gratuito resolve.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
