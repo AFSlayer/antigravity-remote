@@ -188,34 +188,49 @@ const appIcons = `<link rel="icon" type="image/x-icon" href="/favicon.ico">
 
 const touchAction = `<style id="agy-touch-action">
 button,input,textarea,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+input,textarea,select{font-size:16px !important}
 </style>`
 
 const safeArea = `<style id="agy-safe-area">
+html,
+body {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .relative.w-screen.h-\[100dvh\] {
-    height: 100dvh !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    max-height: 100% !important;
     padding: 0 !important;
+    overflow: hidden !important;
   }
   div.h-\[100dvh\].w-screen.flex.flex-col {
-    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: var(--agy-bottom, env(safe-area-inset-bottom, 0px)) !important;
+    height: auto !important;
+    max-height: none !important;
     padding-top: 0 !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    padding-bottom: 0 !important;
     box-sizing: border-box !important;
   }
-  html.agy-keyboard-open div.h-\[100dvh\].w-screen.flex.flex-col {
-    padding-bottom: 0 !important;
-  }
   .aux-drawer-popup {
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-  }
-  html.agy-keyboard-open .aux-drawer-popup {
-    padding-bottom: 0 !important;
+    padding-bottom: var(--agy-bottom, env(safe-area-inset-bottom, 0px)) !important;
   }
   .fixed.bottom-3 {
-    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
-  }
-  html.agy-keyboard-open .fixed.bottom-3 {
-    bottom: 0.75rem !important;
+    bottom: calc(0.75rem + var(--agy-bottom, env(safe-area-inset-bottom, 0px))) !important;
   }
 }
 </style>`
@@ -223,20 +238,52 @@ const safeArea = `<style id="agy-safe-area">
 const keyboardDetect = `<script id="agy-keyboard-detect">
 (function () {
   if (!window.visualViewport) return;
-  var base = window.visualViewport.height;
-  function check() {
-    var height = window.visualViewport.height;
-    if (height / base < 0.85 || (window.innerHeight - height > 150)) {
-      document.documentElement.classList.add("agy-keyboard-open");
-    } else {
-      document.documentElement.classList.remove("agy-keyboard-open");
-      base = height;
+
+  function scrollChatToBottom() {
+    var all = document.querySelectorAll('[class*="overflow-y-auto"], [class*="custom-scrollbar"]');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.scrollHeight > el.clientHeight + 20 && el.offsetHeight > 150) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
   }
-  window.visualViewport.addEventListener("resize", check);
-  window.visualViewport.addEventListener("scroll", check);
+
+  function sync() {
+    var vv = window.visualViewport;
+    var kbHeight = Math.max(0, Math.round(window.innerHeight - vv.height));
+
+    if (kbHeight > 20) {
+      document.documentElement.style.setProperty("--agy-bottom", kbHeight + "px");
+      scrollChatToBottom();
+    } else {
+      document.documentElement.style.removeProperty("--agy-bottom");
+    }
+    if (window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  window.visualViewport.addEventListener("resize", sync);
+  window.visualViewport.addEventListener("scroll", sync);
+
+  window.addEventListener("focusin", function (e) {
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+      setTimeout(function () {
+        sync();
+        scrollChatToBottom();
+      }, 50);
+      setTimeout(function () {
+        sync();
+        scrollChatToBottom();
+      }, 250);
+    }
+  });
 })();
 </script>`
+
 
 const signInBanner = `<style id="agy-signin-banner-style">
 #agy-signin-banner-el {

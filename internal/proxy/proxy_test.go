@@ -21,8 +21,9 @@ const stubBundle = "var a=1;" +
 	"get baseUrl(){return`https://127.0.0.1:${this.port}`}" +
 	"var b=2;"
 
-const indexHTML = `<!doctype html><html><head><title>Jetski Web</title></head>` +
-	`<body><div id="root"></div><script src="/main.js"></script></body></html>`
+const indexHTML = `<!doctype html><html><head><title>Jetski Web</title>` +
+	`<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />` +
+	`</head><body><div id="root"></div><script src="/main.js"></script></body></html>`
 
 func upstream(t *testing.T) *httptest.Server {
 	t.Helper()
