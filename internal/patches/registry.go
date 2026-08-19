@@ -151,6 +151,17 @@ func All() []Patch {
 			Enabled: mobile,
 			Replace: keyboardDetect,
 		},
+		// A phone has no console, and the shell's geometry during the keyboard
+		// animation is the only thing that explains the remaining layout bugs.
+		// Off unless AGY_DEBUG is set.
+		{
+			ID:      "mobile-debug",
+			Desc:    "Record the viewport and shell geometry around every keyboard event",
+			Target:  HTML,
+			Kind:    InjectHead,
+			Enabled: func(o Options) bool { return o.Debug },
+			Replace: mobileDebug,
+		},
 		{
 			ID:      "mobile-signin-banner",
 			Desc:    "Show a sign-in prompt on touch devices, which Antigravity omits there",
@@ -237,53 +248,384 @@ body {
 
 const keyboardDetect = `<script id="agy-keyboard-detect">
 (function () {
-  if (!window.visualViewport) return;
+  var vv = window.visualViewport;
+  if (!vv) return;
 
-  function scrollChatToBottom() {
-    var all = document.querySelectorAll('[class*="overflow-y-auto"], [class*="custom-scrollbar"]');
-    for (var i = 0; i < all.length; i++) {
-      var el = all[i];
-      if (el.scrollHeight > el.clientHeight + 20 && el.offsetHeight > 150) {
-        el.scrollTop = el.scrollHeight;
+  // The messages live in a scroller nested inside the conversation view, which is
+  // itself never taller than its content. Searching the subtree keeps the home
+  // screen's history list out of it -- scrolling that one threw its virtualised
+  // sticky headers off -- without depending on which element is the scroller.
+  function chatScroller() {
+    var root = document.querySelector('[data-testid="conversation-view"]');
+    if (!root) return null;
+    if (root.scrollHeight > root.clientHeight + 20) return root;
+
+    var nodes = root.querySelectorAll("*");
+    for (var i = 0; i < nodes.length && i < 400; i++) {
+      var el = nodes[i];
+      if (el.scrollHeight > el.clientHeight + 20 &&
+          /auto|scroll/.test(getComputedStyle(el).overflowY)) {
+        return el;
       }
     }
+    return null;
   }
 
-  function sync() {
-    var vv = window.visualViewport;
-    var kbHeight = Math.max(0, Math.round(window.innerHeight - vv.height));
+  function scrollChatToBottom() {
+    var el = chatScroller();
+    if (el) el.scrollTop = el.scrollHeight;
+  }
 
-    if (kbHeight > 20) {
-      document.documentElement.style.setProperty("--agy-bottom", kbHeight + "px");
-      scrollChatToBottom();
+  // html is position:fixed, so clientHeight is the layout viewport and does not
+  // move with Safari's toolbar the way innerHeight can.
+  function base() {
+    return document.documentElement.clientHeight || window.innerHeight;
+  }
+
+  // Safari reveals the focused composer by panning the layout viewport, and it
+  // reports that pan as a document scroll even here, where the document is fixed
+  // and has nothing to scroll. Fixed elements move with it, so the whole shell
+  // slides off the top of the screen until the offset is put back. Undoing it
+  // once, mid-animation, is what made the shell lurch; doing it every frame keeps
+  // the offset from ever being on screen for longer than one frame.
+  function unpan() {
+    var de = document.documentElement;
+    if (window.scrollY === 0 && de.scrollTop === 0) return;
+    window.scrollTo(0, 0);
+    if (de.scrollTop !== 0) de.scrollTop = 0;
+  }
+
+  // The keyboard slides up over roughly this long, while visualViewport reports
+  // its final height in a single step at the start.
+  var OPEN_MS = 250;
+
+  // Safari decides whether to pan about 40-80ms after focusin, before it reports
+  // the new viewport height. Shrinking the shell to the height the keyboard had
+  // last time gets the composer out of the way first, so there is no pan to
+  // undo -- undoing one races Safari's own animation, which is what made the
+  // shell lurch. The measurement is kept across page loads because the first
+  // focus of a session is the one with nothing to go on.
+  var predicted = 0;
+  try {
+    predicted = parseInt(localStorage.getItem("agy-kb"), 10) || 0;
+  } catch (e) {}
+  var holdUntil = 0;
+
+  var applied = 0;
+  var goal = 0;
+  var from = 0;
+  var moveAt = 0;
+  var settled = true;
+  var raf = 0;
+  var deadline = 0;
+
+  function write(kb) {
+    if (Math.abs(kb - applied) < 1) return;
+
+    var opening = applied === 0 && kb > 0;
+    applied = kb;
+    if (kb) {
+      document.documentElement.style.setProperty("--agy-bottom", kb + "px");
     } else {
       document.documentElement.style.removeProperty("--agy-bottom");
     }
-    if (window.scrollY !== 0) {
-      window.scrollTo(0, 0);
-    }
+    if (opening) scrollChatToBottom();
   }
 
-  window.visualViewport.addEventListener("resize", sync);
-  window.visualViewport.addEventListener("scroll", sync);
+  function frame() {
+    unpan();
+
+    var target = Math.max(0, Math.round(base() - vv.height));
+    if (target <= 20) target = 0;
+
+    if (target > 0) {
+      holdUntil = 0;
+      if (target !== predicted) {
+        predicted = target;
+        try {
+          localStorage.setItem("agy-kb", String(target));
+        } catch (e) {}
+      }
+    } else if (performance.now() < holdUntil) {
+      // Hold the predicted shrink until Safari reports the keyboard. If it never
+      // does -- a hardware keyboard, say -- the hold expires and the shell
+      // springs back on its own.
+      target = predicted;
+    }
+
+    if (target !== goal) {
+      goal = target;
+      from = applied;
+      moveAt = performance.now();
+      settled = false;
+    }
+
+    if (goal <= from) {
+      // Closing: the keyboard is already on its way out, and following it
+      // immediately is what the shell did smoothly before.
+      write(goal);
+    } else {
+      var p = Math.min(1, (performance.now() - moveAt) / OPEN_MS);
+      write(Math.round(from + (goal - from) * (1 - Math.pow(1 - p, 3))));
+    }
+
+    // The chat has to be pulled to the bottom once the shell has stopped moving:
+    // doing it only while the shell shrinks leaves it short of the last message,
+    // because the scrollable distance is still growing.
+    if (!settled && applied === goal) {
+      settled = true;
+      if (goal > 0) scrollChatToBottom();
+    }
+
+    if (performance.now() < deadline) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
+    raf = 0;
+    write(goal);
+    if (applied > 0) scrollChatToBottom();
+  }
+
+  function track(ms) {
+    unpan();
+    var until = performance.now() + ms;
+    if (until > deadline) deadline = until;
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+
+  vv.addEventListener("resize", function () { track(700); });
+  vv.addEventListener("scroll", function () { track(400); });
 
   window.addEventListener("focusin", function (e) {
     var t = e.target;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
-      if (window.scrollY !== 0) window.scrollTo(0, 0);
-      setTimeout(function () {
-        sync();
-        scrollChatToBottom();
-      }, 50);
-      setTimeout(function () {
-        sync();
-        scrollChatToBottom();
-      }, 250);
+      if (predicted > 20 && applied === 0) {
+        holdUntil = performance.now() + 500;
+        goal = from = predicted;
+        moveAt = performance.now();
+        write(predicted);
+      }
+      track(900);
     }
   });
 })();
 </script>`
 
+const mobileDebug = `<script id="agy-debug">
+(function () {
+  var vv = window.visualViewport;
+  if (!vv) return;
+
+  var ENDPOINT = "/__agy/api/debug/log";
+
+  // The two selectors the safe-area patch relies on. Their match count is logged
+  // on every sample because a selector that matches nothing, or several nested
+  // shells, still reports as "applied" in the patch report.
+  var OUTER = ".relative.w-screen.h-\\[100dvh\\]";
+  var INNER = "div.h-\\[100dvh\\].w-screen.flex.flex-col";
+
+  var session = Math.random().toString(36).slice(2, 8);
+  var episodes = 0;
+
+  function n(v) { return Math.round(v); }
+  function pad(v, w) { v = String(v); while (v.length < w) v = " " + v; return v; }
+  function padR(v, w) { v = String(v); while (v.length < w) v += " "; return v; }
+
+  function all(sel) {
+    try { return document.querySelectorAll(sel); } catch (e) { return []; }
+  }
+  function one(sel) {
+    try { return document.querySelector(sel); } catch (e) { return null; }
+  }
+
+  function box(el) {
+    if (!el) return "-";
+    var b = el.getBoundingClientRect();
+    return n(b.top) + ".." + n(b.bottom) + "/h" + n(b.height);
+  }
+
+  function insets() {
+    var probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding:" +
+      "env(safe-area-inset-top) env(safe-area-inset-right) " +
+      "env(safe-area-inset-bottom) env(safe-area-inset-left)";
+    document.documentElement.appendChild(probe);
+    var s = getComputedStyle(probe);
+    var out = [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].join("/");
+    probe.parentNode.removeChild(probe);
+    return out.replace(/px/g, "");
+  }
+
+  // In a conversation the composer's scroller is the conversation view; on the
+  // home screen the history list is virtualised and its scroller is an ancestor.
+  function scroller() {
+    var el = one('[data-testid="conversation-view"]');
+    if (el) return el;
+    el = one('[data-testid^="conversation-list-"]');
+    while (el && el !== document.body) {
+      if (/auto|scroll/.test(getComputedStyle(el).overflowY)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  // Focusing an input makes the browser reveal it by scrolling ancestors, and an
+  // overflow:hidden box still scrolls programmatically. An offset left behind
+  // there moves the whole shell without touching the document scroll, so name
+  // every ancestor of the composer that is not at zero.
+  function scrolled() {
+    var out = [];
+    var el = one('[contenteditable="true"]');
+    for (var i = 0; el && i < 15 && el !== document.documentElement; i++) {
+      if (el.scrollTop || el.scrollLeft) {
+        out.push(
+          el.tagName.toLowerCase() +
+          (el.getAttribute("data-testid") ? "[" + el.getAttribute("data-testid") + "]" : "") +
+          "." + String(el.className || "").split(/\s+/).slice(0, 2).join(".") +
+          "=" + n(el.scrollTop) + "," + n(el.scrollLeft));
+      }
+      el = el.parentElement;
+    }
+    return out.length ? out.join(" ") : "-";
+  }
+
+  function heads() {
+    var nodes = all('[data-testid="section-header"]');
+    var out = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var wrap = nodes[i].closest("[data-index]") || nodes[i];
+      var s = getComputedStyle(wrap);
+      out.push(
+        (nodes[i].getAttribute("data-title") || "?") +
+        " " + s.position + " top:" + s.top + " z:" + s.zIndex + " " + box(wrap));
+    }
+    return out.length ? out.join(" | ") : "-";
+  }
+
+  // Which element actually holds the messages is not obvious from the class names,
+  // and picking the wrong one is why a chat can stay scrolled away from its last
+  // message. List every scroller that has something to scroll.
+  function scrollers() {
+    var nodes = document.querySelectorAll("body *");
+    var out = [];
+    for (var i = 0; i < nodes.length && out.length < 5; i++) {
+      var el = nodes[i];
+      if (el.scrollHeight <= el.clientHeight + 4) continue;
+      if (!/auto|scroll/.test(getComputedStyle(el).overflowY)) continue;
+      out.push(
+        (el.getAttribute("data-testid") || el.tagName.toLowerCase() +
+          "." + String(el.className || "").split(/\s+/)[0]) +
+        ":st" + n(el.scrollTop) + "/sh" + el.scrollHeight + "/ch" + el.clientHeight);
+    }
+    return out.length ? out.join(" ") : "-";
+  }
+
+  function stickyOffset() {
+    var el = one('[data-testid="history-search-input"]');
+    el = el && el.closest(".sticky");
+    return el ? n(el.getBoundingClientRect().height) : "-";
+  }
+
+  function state() {
+    var de = document.documentElement;
+    var sc = scroller();
+    return [
+      "vv=" + n(vv.width) + "x" + n(vv.height) + "+" + n(vv.offsetTop) + "," + n(vv.offsetLeft),
+      "pageTop=" + n(vv.pageTop),
+      "scale=" + vv.scale,
+      "win=" + window.innerWidth + "x" + window.innerHeight,
+      "dch=" + de.clientHeight,
+      "dsh=" + de.scrollHeight,
+      "dst=" + de.scrollTop,
+      "sy=" + n(window.scrollY),
+      "kb=" + (de.style.getPropertyValue("--agy-bottom") || "-"),
+      "outer=" + all(OUTER).length + ":" + box(one(OUTER)),
+      "inner=" + all(INNER).length + ":" + box(one(INNER)),
+      "nav=" + box(one('[data-testid="mobile-open-settings"]')),
+      "comp=" + box(one('[contenteditable="true"]')),
+      "scr=" + (sc ? "st" + n(sc.scrollTop) + "/sh" + sc.scrollHeight + "/ch" + sc.clientHeight : "-"),
+      "panned=" + scrolled(),
+      "scrollers=[" + scrollers() + "]",
+      "stickyTop=" + stickyOffset(),
+      "heads=[" + heads() + "]"
+    ].join(" ");
+  }
+
+  var lines = null;
+  var startedAt = 0;
+  var deadline = 0;
+  var raf = 0;
+  var last = "";
+
+  function push(ev) {
+    var s = state();
+    if (ev === "raf" && s === last) return;
+    last = s;
+    // Safari drops a keepalive body over 64KB, so stay well inside one request.
+    if (lines.length > 120) return;
+    lines.push("  t=" + pad(n(performance.now() - startedAt), 5) + " ev=" + padR(ev, 9) + " " + s);
+  }
+
+  function flush() {
+    var body = lines.join("\n") + "\n";
+    lines = null;
+    try {
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        credentials: "same-origin",
+        body: body
+      });
+    } catch (e) {}
+  }
+
+  function loop() {
+    push("raf");
+    if (performance.now() < deadline) {
+      raf = requestAnimationFrame(loop);
+      return;
+    }
+    raf = 0;
+    flush();
+  }
+
+  function begin(ev, ms) {
+    if (!lines) {
+      lines = [];
+      startedAt = performance.now();
+      last = "";
+      episodes++;
+      lines.push(
+        "=== " + new Date().toISOString() +
+        " session=" + session + " ep=" + episodes + " trigger=" + ev +
+        " standalone=" + (navigator.standalone === true) +
+        "/" + window.matchMedia("(display-mode:standalone)").matches +
+        " screen=" + screen.width + "x" + screen.height +
+        " dpr=" + window.devicePixelRatio +
+        " env(t/r/b/l)=" + insets() +
+        " ua=" + navigator.userAgent);
+    }
+    push(ev);
+    var until = performance.now() + ms;
+    if (until > deadline) deadline = until;
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+
+  function editable(t) {
+    return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+  }
+
+  vv.addEventListener("resize", function () { begin("vv-resize", 700); });
+  vv.addEventListener("scroll", function () { begin("vv-scroll", 400); });
+  window.addEventListener("focusin", function (e) {
+    if (editable(e.target)) begin("focusin", 1500);
+  });
+  window.addEventListener("focusout", function (e) {
+    if (editable(e.target)) begin("focusout", 1200);
+  });
+})();
+</script>`
 
 const signInBanner = `<style id="agy-signin-banner-style">
 #agy-signin-banner-el {

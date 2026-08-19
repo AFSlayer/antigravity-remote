@@ -34,6 +34,10 @@ type Config struct {
 	LanguageServer  string   `json:"language_server,omitempty"`
 	IDEVersion      string   `json:"ide_version,omitempty"`
 
+	// Debug comes from AGY_DEBUG only, and is deliberately not persisted: it turns
+	// on the mobile geometry tracer, which is meant for one session at a time.
+	Debug bool `json:"-"`
+
 	dir string
 }
 
@@ -161,6 +165,9 @@ func (c *Config) applyEnv() {
 	}
 	if v := os.Getenv("AGY_DISABLE_PATCHES"); v != "" {
 		c.DisabledPatches = splitList(v)
+	}
+	if v := os.Getenv("AGY_DEBUG"); v != "" && v != "0" {
+		c.Debug = true
 	}
 	if v := os.Getenv("AGY_TRUSTED_PROXIES"); v != "" {
 		c.TrustedProxies = splitList(v)

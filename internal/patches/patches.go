@@ -56,6 +56,8 @@ type Options struct {
 	// Disabled turns off individual patches by ID, for narrowing down which one is
 	// responsible when the UI misbehaves.
 	Disabled map[string]bool
+	// Debug injects the mobile geometry tracer, which reports to the server.
+	Debug bool
 }
 
 // Patch is a single declarative rewrite of the served bundle.

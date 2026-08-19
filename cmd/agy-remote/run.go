@@ -103,6 +103,7 @@ func (r *runner) start() error {
 		MobileUX:      r.cfg.MobileUX,
 		WorkspaceRoot: r.cfg.WorkspaceRoot,
 		Disabled:      r.cfg.DisabledPatchSet(),
+		Debug:         r.cfg.Debug,
 	}
 	patchOpts.CacheKey = patches.CacheKey(version, patchOpts)
 
@@ -147,6 +148,14 @@ func (r *runner) start() error {
 		publicMux.Handle(path, assets.Handler())
 	}
 	ui.NewSignIn(signin.New(instance, r.shimURLFile)).Register(publicMux)
+	if r.cfg.Debug {
+		if debug, err := ui.NewDebug(r.cfg.Path("mobile-debug.log")); err != nil {
+			warn("could not open the mobile debug log: %v", err)
+		} else {
+			debug.Register(publicMux)
+			info("Mobile debug tracing on, writing to %s", dim(debug.Path()))
+		}
+	}
 	publicMux.Handle("/", p.Handler())
 
 	shutdown := make(chan struct{})

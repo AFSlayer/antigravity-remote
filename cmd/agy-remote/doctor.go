@@ -153,6 +153,7 @@ func (c *checklist) checkPatches(cfg *config.Config, instance *lsproc.Instance) 
 		MobileUX:      cfg.MobileUX,
 		WorkspaceRoot: cfg.WorkspaceRoot,
 		Disabled:      cfg.DisabledPatchSet(),
+		Debug:         cfg.Debug,
 	}
 	opts.CacheKey = patches.CacheKey(version, opts)
 
