@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type Credentials struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 
 	path string
+	mu   sync.Mutex
 }
 
 // GeneratePassword returns a random password in xxxx-xxxx-xxxx form, drawn from
@@ -134,17 +136,31 @@ func (c *Credentials) save() error {
 }
 
 // Verify reports whether password matches, comparing in constant time.
+//
+// The verifier is re-read from disk on every attempt. The passwd command runs as a
+// separate process against an already-running server, so without this a rotated
+// password would silently keep accepting the old one until the service restarted.
+// A failed read leaves the in-memory copy in place, so a transient filesystem
+// problem cannot lock everyone out. The re-read is immaterial next to the PBKDF2
+// derivation below, which is four orders of magnitude more expensive.
 func (c *Credentials) Verify(password string) bool {
-	salt, err := base64.StdEncoding.DecodeString(c.Salt)
+	c.mu.Lock()
+	if fresh, err := LoadCredentials(c.path); err == nil {
+		c.Algorithm, c.Iterations, c.Salt, c.Hash, c.UpdatedAt =
+			fresh.Algorithm, fresh.Iterations, fresh.Salt, fresh.Hash, fresh.UpdatedAt
+	}
+	saltEnc, hashEnc, iters := c.Salt, c.Hash, c.Iterations
+	c.mu.Unlock()
+
+	salt, err := base64.StdEncoding.DecodeString(saltEnc)
 	if err != nil {
 		return false
 	}
-	want, err := base64.StdEncoding.DecodeString(c.Hash)
+	want, err := base64.StdEncoding.DecodeString(hashEnc)
 	if err != nil {
 		return false
 	}
 
-	iters := c.Iterations
 	if iters <= 0 {
 		iters = iterations
 	}
@@ -167,6 +183,9 @@ func (c *Credentials) Set(password string) error {
 	if err != nil {
 		return err
 	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.Algorithm = next.Algorithm
 	c.Iterations = next.Iterations

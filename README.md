@@ -55,8 +55,8 @@ Antigravity doesn't need to be open first. If it isn't, `agy-remote` starts it,
 turns on remote control, waits for the language server, and works out which of its
 ports serves the UI.
 
-On the phone use Share → *Add to Home Screen*. You get the Antigravity icon and a
-fullscreen app with no browser bar.
+On the phone use Share → *Add to Home Screen*. You get the Antigravity icon on the
+home screen.
 
 The binaries aren't code-signed, so downloading an archive in a browser gets it
 quarantined. macOS: right-click, **Open**, **Open** again. Windows: **More info** →
@@ -102,12 +102,11 @@ says which applied.
 | --- | --- |
 | The bundle calls `https://127.0.0.1:<port>`, which from a phone is the phone | Use the browser's origin |
 | Enter sends mid-sentence | On touch, Enter is a newline and Cmd/Ctrl+Enter sends |
-| The iOS home bar covers the composer | Respect `safe-area-inset-bottom`, drop the gap with the keyboard open |
 | Tapping a model picks medium and closes the menu | Tap opens the effort submenu |
 | "Enable Notifications" banner on the first reply | Skip it on touch devices |
 | A mic button that can't work, since standalone has no transcription | Hide it |
 | New projects start in `/` | Start in the workspace folder you set |
-| No icon, 300 ms tap delay, browser chrome | Icon, instant taps, manifest for fullscreen |
+| No icon, 300 ms tap delay | The Antigravity icon, instant taps |
 
 `agy-remote --no-mobile-patches` leaves the UI alone.
 

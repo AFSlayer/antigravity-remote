@@ -152,7 +152,7 @@ func TestProxyInjectsIntoHTML(t *testing.T) {
 
 	out := body(t, get(t, front.URL, "/", "text/html"))
 
-	for _, want := range []string{"agy-safe-area", "agy-keyboard-detect", "manifest.webmanifest", `src="/main.js?agy=k1"`} {
+	for _, want := range []string{"agy-touch-action", "agy-safe-area", "agy-keyboard-detect", "agy-signin-banner", `src="/main.js?agy=k1"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in patched HTML", want)
 		}
@@ -169,7 +169,7 @@ func TestProxyLeavesOtherContentAlone(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("unexpected status %d", resp.StatusCode)
 	}
-	if strings.Contains(body(t, resp), "agy-safe-area") {
+	if strings.Contains(body(t, resp), "agy-touch-action") {
 		t.Error("non-HTML asset must not be patched")
 	}
 }

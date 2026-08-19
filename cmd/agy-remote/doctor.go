@@ -149,7 +149,11 @@ func (c *checklist) checkPatches(cfg *config.Config, instance *lsproc.Instance) 
 		return
 	}
 
-	opts := patches.Options{MobileUX: cfg.MobileUX, WorkspaceRoot: cfg.WorkspaceRoot}
+	opts := patches.Options{
+		MobileUX:      cfg.MobileUX,
+		WorkspaceRoot: cfg.WorkspaceRoot,
+		Disabled:      cfg.DisabledPatchSet(),
+	}
 	opts.CacheKey = patches.CacheKey(version, opts)
 
 	for _, target := range []struct {

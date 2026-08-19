@@ -50,7 +50,7 @@ irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/i
 不用事先打开 Antigravity。没运行的话 `agy-remote` 会启动它、打开远程控制、等 language
 server 就绪，再找出哪个端口在提供界面。
 
-手机上用分享 →“添加到主屏幕”，会以 Antigravity 图标全屏打开，没有地址栏。
+手机上用分享 →“添加到主屏幕”，主屏幕上会出现 Antigravity 图标。
 
 二进制文件没有代码签名，所以用浏览器下载压缩包会被系统隔离。macOS 右键 **打开** 再
 **打开**；Windows 点 **更多信息** → **仍要运行**。上面的安装命令用 `curl`，不会被打上
@@ -91,12 +91,11 @@ token 缺失时 `agy-remote` 会把这条命令打出来。
 | --- | --- |
 | bundle 调用 `https://127.0.0.1:<port>`，在手机上那就是手机 | 改用浏览器的 origin |
 | 句子没写完按回车就发出去了 | 触屏上回车是换行，Cmd/Ctrl+回车才发送 |
-| iOS 底部 home 条挡住输入框 | 处理 `safe-area-inset-bottom`，键盘弹出时去掉留白 |
 | 点模型就按 medium 选中并关菜单 | 点开推理强度子菜单 |
 | 第一次回复后弹出 “Enable Notifications” 横幅 | 触屏设备上跳过 |
 | standalone 没有语音转写，麦克风按钮却还在 | 隐藏 |
 | 新建项目从 `/` 开始 | 从配置的工作目录开始 |
-| 没图标、300ms 点击延迟、浏览器外壳 | 图标、即时响应、manifest 全屏 |
+| 没图标、300ms 点击延迟 | Antigravity 图标、即时响应 |
 
 想看原样界面用 `agy-remote --no-mobile-patches`。
 

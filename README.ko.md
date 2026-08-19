@@ -52,8 +52,7 @@ irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/i
 Antigravity를 미리 켜둘 필요는 없다. 안 켜져 있으면 `agy-remote`가 앱을 띄우고, 원격
 제어를 켜고, language server를 기다린 다음 어느 포트가 UI를 서브하는지 알아낸다.
 
-폰에서는 공유 → *홈 화면에 추가*를 쓰면 된다. Antigravity 아이콘으로 주소창 없이
-전체화면으로 열린다.
+폰에서는 공유 → *홈 화면에 추가*를 쓰면 된다. 홈 화면에 Antigravity 아이콘이 생긴다.
 
 바이너리에 코드 서명이 없어서 브라우저로 압축 파일을 받으면 OS가 격리한다. macOS는
 우클릭 → **열기** → 다시 **열기**. Windows는 **추가 정보** → **실행**. 위 설치 명령은
@@ -96,12 +95,11 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | --- | --- |
 | 번들이 `https://127.0.0.1:<port>`로 호출한다. 폰에서는 그게 폰이다 | 브라우저 origin을 쓴다 |
 | 문장 쓰는 중에 엔터를 누르면 전송된다 | 터치에서는 엔터가 줄바꿈, Cmd/Ctrl+엔터가 전송 |
-| iOS 홈 바가 입력창을 가린다 | `safe-area-inset-bottom` 반영, 키보드 뜨면 여백 제거 |
 | 모델을 탭하면 medium으로 선택되고 팝업이 닫힌다 | 탭하면 추론 단계 서브메뉴가 열린다 |
 | 첫 답변 뒤 "Enable Notifications" 배너가 뜬다 | 터치 기기에서는 건너뛴다 |
 | 스탠드얼론에는 전사가 없는데 마이크 버튼이 있다 | 숨긴다 |
 | 새 프로젝트가 `/`에서 시작한다 | 지정한 워크스페이스 폴더에서 시작 |
-| 아이콘 없음, 300ms 탭 지연, 브라우저 UI | 아이콘, 즉시 반응, 매니페스트로 전체화면 |
+| 아이콘 없음, 300ms 탭 지연 | Antigravity 아이콘, 즉시 반응 |
 
 원본 그대로 보려면 `agy-remote --no-mobile-patches`.
 

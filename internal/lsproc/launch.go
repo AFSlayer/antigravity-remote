@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -24,6 +25,29 @@ type HeadlessOptions struct {
 	APIServerURL      string
 	CloudCodeEndpoint string
 	LogWriter         *os.File
+
+	// BrowserShimDir is prepended to the child's PATH. Sign-in needs it: the
+	// language server opens the Google consent page with xdg-open, which does not
+	// exist on a server, so a shim there captures the URL instead of losing it.
+	BrowserShimDir string
+}
+
+// BrowserShimName is the command the language server runs to open a URL.
+const BrowserShimName = "xdg-open"
+
+// WriteBrowserShim installs a stand-in for xdg-open in dir that appends whatever
+// URL it is asked to open to urlFile, one per line.
+func WriteBrowserShim(dir, urlFile string) error {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+
+	script := "#!/bin/sh\nprintf '%s\\n' \"$1\" >> " + shellQuote(urlFile) + "\n"
+	return os.WriteFile(filepath.Join(dir, BrowserShimName), []byte(script), 0o700)
+}
+
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
 // NewCSRFToken returns a UUID to pass as --csrf_token. The desktop app always
@@ -80,6 +104,9 @@ func LaunchHeadless(opts HeadlessOptions) (*exec.Cmd, error) {
 	if opts.LogWriter != nil {
 		cmd.Stdout = opts.LogWriter
 		cmd.Stderr = opts.LogWriter
+	}
+	if opts.BrowserShimDir != "" {
+		cmd.Env = append(os.Environ(), "PATH="+opts.BrowserShimDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	}
 
 	if err := cmd.Start(); err != nil {

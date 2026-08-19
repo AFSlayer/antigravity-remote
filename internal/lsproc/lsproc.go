@@ -7,8 +7,10 @@
 package lsproc
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -174,6 +176,74 @@ func (i *Instance) Fetch(path string) (body []byte, contentType string, err erro
 }
 
 // WaitFor polls until any standalone language server is ready.
+// CSRFHeader is the header the web bundle uses to authorise RPCs against the
+// language server.
+const CSRFHeader = "x-codeium-csrf-token"
+
+// Call invokes a Connect RPC on the language server. method is the bare method
+// name, for example "GetAuthStatus". It returns the raw JSON response.
+//
+// Some methods block for a long time; Login in particular waits for an OAuth
+// callback, so pass a context with a deadline that matches the caller's needs.
+func (i *Instance) Call(ctx context.Context, method string, body any) ([]byte, error) {
+	payload := []byte("{}")
+	if body != nil {
+		encoded, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		payload = encoded
+	}
+
+	url := fmt.Sprintf("%s/exa.language_server_pb.LanguageServerService/%s", i.BaseURL(), method)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connect-Protocol-Version", "1")
+	if i.CSRFToken != "" {
+		req.Header.Set(CSRFHeader, i.CSRFToken)
+	}
+
+	client := &http.Client{Transport: probeClient.Transport}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return data, fmt.Errorf("%s returned %s", method, resp.Status)
+	}
+	return data, nil
+}
+
+// SignedIn reports whether the language server currently holds valid Antigravity
+// credentials.
+func (i *Instance) SignedIn(ctx context.Context) bool {
+	data, err := i.Call(ctx, "GetAuthStatus", nil)
+	if err != nil {
+		return false
+	}
+
+	var out struct {
+		AuthResult struct {
+			HasValidAuth bool `json:"hasValidAuth"`
+		} `json:"authResult"`
+	}
+	if err := json.Unmarshal(data, &out); err != nil {
+		return false
+	}
+	return out.AuthResult.HasValidAuth
+}
+
 func WaitFor(ctx context.Context, timeout time.Duration, onTick func()) (*Instance, error) {
 	return WaitForMatching(ctx, timeout, Filter{}, onTick)
 }

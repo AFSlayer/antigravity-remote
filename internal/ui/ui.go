@@ -3,12 +3,14 @@
 package ui
 
 import (
+	"context"
 	"embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	qrcode "github.com/skip2/go-qrcode"
 
@@ -232,6 +234,11 @@ func (l *Local) shutdown(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
 	go l.opts.Shutdown()
+}
+
+// contextWithTimeout bounds a handler's work without outliving the request.
+func contextWithTimeout(r *http.Request, d time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(r.Context(), d)
 }
 
 func isPost(w http.ResponseWriter, r *http.Request) bool {

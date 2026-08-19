@@ -9,6 +9,11 @@ import (
 // the assignment and the byEffort lookup.
 var modelEffortRe = regexp.MustCompile(`,onClick:\(\)=>\{var y=[\r\n\s]*v\.byEffort\.get\(w\);y&&b\(y\)\}`)
 
+// The Settings > Account button calls showLoginFlow, which the standalone build
+// wires to a stub that only writes to the console. The minifier may wrap the line
+// between the arrow and the call.
+var signInButtonRe = regexp.MustCompile(`onClick:\(\)=>[\r\n\s]*\w+\.showLoginFlow\(\)`)
+
 func mobile(o Options) bool { return o.MobileUX }
 
 // All returns every patch in a stable order. Adding a patch here is the only
@@ -73,6 +78,19 @@ func All() []Patch {
 			Find:    `uz.displayName="GutterHoverCommentButton";var vz=(`,
 			Replace: `uz.displayName="GutterHoverCommentButton";var vz=function(){return null};var vzDisabled=(`,
 		},
+		// Google's standalone build cannot sign in from a browser: its auth service
+		// is a stub, and its OAuth client only accepts loopback redirect URIs. Point
+		// the button at a page that can actually complete the flow instead of
+		// leaving it dead.
+		{
+			ID:      "sign-in-button",
+			Desc:    "Make the Settings > Account sign-in button work over the network",
+			Target:  MainJS,
+			Kind:    Regexp,
+			FindRe:  signInButtonRe,
+			Replace: `onClick:()=>{window.location.href="/__agy/signin"}`,
+		},
+
 		// The prompt is an in-app banner shown once when notificationPermission is
 		// still "default". Making the "have we asked yet" flag read as true on
 		// touch devices skips it without touching the granted path, so a desktop
@@ -111,13 +129,6 @@ func All() []Patch {
 			Replace: appIcons,
 		},
 		{
-			ID:      "pwa-manifest",
-			Desc:    "Add a web app manifest so Add to Home Screen opens fullscreen",
-			Target:  HTML,
-			Kind:    InjectHead,
-			Replace: pwaManifest,
-		},
-		{
 			ID:      "touch-action",
 			Desc:    "Remove the 300ms tap delay and tap highlight on controls",
 			Target:  HTML,
@@ -139,6 +150,14 @@ func All() []Patch {
 			Kind:    InjectHead,
 			Enabled: mobile,
 			Replace: keyboardDetect,
+		},
+		{
+			ID:      "mobile-signin-banner",
+			Desc:    "Show a sign-in prompt on touch devices, which Antigravity omits there",
+			Target:  HTML,
+			Kind:    InjectHead,
+			Enabled: mobile,
+			Replace: signInBanner,
 		},
 		{
 			ID:     "cache-bust",
@@ -167,19 +186,37 @@ func jsString(s string) string {
 const appIcons = `<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">`
 
-const pwaManifest = `<link rel="manifest" href="/__agy/manifest.webmanifest">`
-
 const touchAction = `<style id="agy-touch-action">
 button,input,textarea,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 </style>`
 
 const safeArea = `<style id="agy-safe-area">
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .h-\[100dvh\] { height: calc(100dvh - env(safe-area-inset-bottom, 0px)) !important; }
-  html.agy-keyboard-open .h-\[100dvh\] { height: 100dvh !important; }
-  .aux-drawer-popup { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
-  html.agy-keyboard-open .aux-drawer-popup { padding-bottom: 0 !important; }
-  .fixed.bottom-3 { bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important; }
+  .relative.w-screen.h-\[100dvh\] {
+    height: 100dvh !important;
+    padding: 0 !important;
+  }
+  div.h-\[100dvh\].w-screen.flex.flex-col {
+    height: 100% !important;
+    padding-top: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    box-sizing: border-box !important;
+  }
+  html.agy-keyboard-open div.h-\[100dvh\].w-screen.flex.flex-col {
+    padding-bottom: 0 !important;
+  }
+  .aux-drawer-popup {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+  html.agy-keyboard-open .aux-drawer-popup {
+    padding-bottom: 0 !important;
+  }
+  .fixed.bottom-3 {
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  html.agy-keyboard-open .fixed.bottom-3 {
+    bottom: 0.75rem !important;
+  }
 }
 </style>`
 
@@ -187,13 +224,155 @@ const keyboardDetect = `<script id="agy-keyboard-detect">
 (function () {
   if (!window.visualViewport) return;
   var base = window.visualViewport.height;
-  window.visualViewport.addEventListener("resize", function () {
-    if (window.visualViewport.height / base < 0.85) {
+  function check() {
+    var height = window.visualViewport.height;
+    if (height / base < 0.85 || (window.innerHeight - height > 150)) {
       document.documentElement.classList.add("agy-keyboard-open");
     } else {
       document.documentElement.classList.remove("agy-keyboard-open");
-      base = window.visualViewport.height;
+      base = height;
     }
-  });
+  }
+  window.visualViewport.addEventListener("resize", check);
+  window.visualViewport.addEventListener("scroll", check);
+})();
+</script>`
+
+const signInBanner = `<style id="agy-signin-banner-style">
+#agy-signin-banner-el {
+  position: fixed;
+  z-index: 40;
+  display: none;
+  text-decoration: none;
+  animation: agy-banner-in 0.18s ease-out;
+}
+@keyframes agy-banner-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+</style>
+<script id="agy-signin-banner">
+(function () {
+  if (!(window.matchMedia && window.matchMedia("(pointer:coarse)").matches)) return;
+  if (location.pathname.indexOf("/__agy/") === 0) return;
+
+  // Antigravity's own auth banner, reproduced with its classes and icon so it themes
+  // with the app. Its mobile layout omits the real one, which on desktop sits above
+  // the composer card.
+  //
+  // The banner lives on document.body and is positioned over that spot rather than
+  // inserted next to the card: the card is inside React's tree, so anything put
+  // there is removed on the next render, and re-adding it in a loop thrashes the
+  // layout badly enough to break the app's own keyboard handling.
+  var ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 -960 960 960"' +
+    ' fill="currentColor" class="h-4 w-4 shrink-0 text-yellow-500" aria-hidden="true">' +
+    '<path d="M74.62-140L480-840L885.38-140H74.62ZM178-200H782L480-720L178-200Zm324.92-57.08q9.38-9.38 ' +
+    '9.38-22.92t-9.38-22.92T480-312.31t-22.92,9.38T447.69-280t9.38,22.92T480-247.69t22.92-9.38ZM450-352.31h60v-200H450v200ZM480-460Z"/>' +
+    "</svg>";
+
+  var banner = document.createElement("a");
+  banner.id = "agy-signin-banner-el";
+  banner.href = "/__agy/signin";
+  banner.className =
+    "bg-muted px-3 min-h-[30px] py-1.5 flex items-center gap-2 text-sm border rounded-lg";
+  banner.innerHTML =
+    ICON +
+    '<span class="text-foreground"><span>To use the agent, please login </span>' +
+    '<span class="text-current underline">here</span></span>';
+
+  // The composer is the only editable region on screen. Its card is the outermost
+  // ancestor that still has a visible margin on both sides, since the wrappers above
+  // it span the full width. Requiring an actual inset rather than merely "not quite
+  // full width" is what keeps the banner from stretching edge to edge. Matching on
+  // width rather than height keeps it detectable while the keyboard is open, which
+  // shrinks innerHeight and broke an earlier ratio-based rule.
+  function composerCard() {
+    var editable = document.querySelector('[contenteditable="true"]');
+    if (!editable) return null;
+
+    var card = null;
+    var node = editable;
+    var viewport = window.innerWidth;
+
+    for (var i = 0; i < 10 && node.parentElement && node.parentElement !== document.body; i++) {
+      node = node.parentElement;
+      var box = node.getBoundingClientRect();
+      if (box.left >= 6 && box.right <= viewport - 6 && box.width >= viewport * 0.5 && box.height > 24) {
+        card = node;
+      }
+    }
+    return card;
+  }
+
+  // Antigravity does render its own banner inside a chat, just not on the project
+  // list, so showing ours unconditionally puts two of them on screen. Detect the real
+  // one by the copy it shares with the desktop layout and stand down when it is
+  // there. If Google restyles it this stops matching and the duplicate comes back,
+  // which is the mild failure mode of the two.
+  function nativeBanner() {
+    var nodes = document.querySelectorAll('[class*="bg-muted"]');
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i] !== banner && nodes[i].textContent.indexOf("please login") >= 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  var lastKey = "";
+
+  function sync() {
+    var card = nativeBanner() ? null : composerCard();
+    if (!card) {
+      if (banner.style.display !== "none") banner.style.display = "none";
+      lastKey = "";
+      return;
+    }
+
+    var box = card.getBoundingClientRect();
+    if (box.width <= 0) return;
+
+    if (banner.style.display === "none") banner.style.display = "flex";
+
+    // Both getBoundingClientRect and position:fixed resolve against the layout
+    // viewport, so tracking the card needs no adjustment for Safari's pan: the two
+    // move together. Subtracting the pan here pushed the banner off-screen instead.
+    var height = banner.offsetHeight || 32;
+    var top = Math.max(4, box.top - height - 8);
+    var key = box.left + ":" + box.width + ":" + top;
+    if (key === lastKey) return;
+    lastKey = key;
+
+    banner.style.left = box.left + "px";
+    banner.style.width = box.width + "px";
+    banner.style.top = top + "px";
+  }
+
+  function start() {
+    document.body.appendChild(banner);
+    sync();
+
+    window.addEventListener("resize", sync, { passive: true });
+    window.addEventListener("scroll", sync, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", sync, { passive: true });
+      window.visualViewport.addEventListener("scroll", sync, { passive: true });
+    }
+    setInterval(sync, 1000);
+  }
+
+  function check() {
+    fetch("/__agy/api/signin/status", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && !d.signedIn) start(); })
+      .catch(function () {});
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", check);
+  } else {
+    check();
+  }
 })();
 </script>`

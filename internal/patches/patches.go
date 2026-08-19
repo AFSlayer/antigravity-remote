@@ -53,6 +53,9 @@ type Options struct {
 	WorkspaceRoot string
 	// CacheKey busts cached bundles when the applied patch set changes.
 	CacheKey string
+	// Disabled turns off individual patches by ID, for narrowing down which one is
+	// responsible when the UI misbehaves.
+	Disabled map[string]bool
 }
 
 // Patch is a single declarative rewrite of the served bundle.
@@ -87,6 +90,9 @@ func (p Patch) replacement(opts Options) string {
 }
 
 func (p Patch) enabled(opts Options) bool {
+	if opts.Disabled[p.ID] {
+		return false
+	}
 	if p.Enabled == nil {
 		return true
 	}

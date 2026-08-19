@@ -23,15 +23,16 @@ const (
 // Config is the resolved configuration. It is persisted to config.json by the
 // config command so a service can start with no arguments.
 type Config struct {
-	Port           int      `json:"port"`
-	BindAddr       string   `json:"bind_addr"`
-	PublicURL      string   `json:"public_url,omitempty"`
-	WorkspaceRoot  string   `json:"workspace_root,omitempty"`
-	SessionDays    int      `json:"session_days"`
-	TrustedProxies []string `json:"trusted_proxies,omitempty"`
-	MobileUX       bool     `json:"mobile_ux"`
-	LanguageServer string   `json:"language_server,omitempty"`
-	IDEVersion     string   `json:"ide_version,omitempty"`
+	Port            int      `json:"port"`
+	BindAddr        string   `json:"bind_addr"`
+	PublicURL       string   `json:"public_url,omitempty"`
+	WorkspaceRoot   string   `json:"workspace_root,omitempty"`
+	SessionDays     int      `json:"session_days"`
+	TrustedProxies  []string `json:"trusted_proxies,omitempty"`
+	MobileUX        bool     `json:"mobile_ux"`
+	DisabledPatches []string `json:"disabled_patches,omitempty"`
+	LanguageServer  string   `json:"language_server,omitempty"`
+	IDEVersion      string   `json:"ide_version,omitempty"`
 
 	dir string
 }
@@ -158,6 +159,9 @@ func (c *Config) applyEnv() {
 	if v := os.Getenv("AGY_IDE_VERSION"); v != "" {
 		c.IDEVersion = v
 	}
+	if v := os.Getenv("AGY_DISABLE_PATCHES"); v != "" {
+		c.DisabledPatches = splitList(v)
+	}
 	if v := os.Getenv("AGY_TRUSTED_PROXIES"); v != "" {
 		c.TrustedProxies = splitList(v)
 	}
@@ -189,6 +193,18 @@ func (c *Config) Save() error {
 		return err
 	}
 	return os.WriteFile(c.Path("config.json"), append(data, '\n'), 0o600)
+}
+
+// DisabledPatchSet turns DisabledPatches into a lookup for patches.Options.
+func (c *Config) DisabledPatchSet() map[string]bool {
+	if len(c.DisabledPatches) == 0 {
+		return nil
+	}
+	out := make(map[string]bool, len(c.DisabledPatches))
+	for _, id := range c.DisabledPatches {
+		out[strings.TrimSpace(id)] = true
+	}
+	return out
 }
 
 // EnsureDir creates the data directory if needed.
