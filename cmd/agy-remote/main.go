@@ -31,6 +31,7 @@ Flags:
   --trusted-proxies CIDRS   Comma-separated proxy CIDRs, e.g. 127.0.0.1/32
   --session-days N          How long a signed-in device stays signed in (default 30)
   --no-mobile-patches       Serve the UI unmodified
+  --disable-patch ID        Turn off one patch, repeatable (see agy-remote doctor)
 
 Environment:
   AGY_PASSWORD, AGY_PORT, AGY_BIND, AGY_PUBLIC_URL, AGY_WORKSPACE_ROOT,
@@ -104,6 +105,8 @@ func loadConfig(args []string, mode runMode) (*config.Config, error) {
 	trustedProxies := fs.String("trusted-proxies", strings.Join(cfg.TrustedProxies, ","), "")
 	sessionDays := fs.Int("session-days", cfg.SessionDays, "")
 	noMobile := fs.Bool("no-mobile-patches", !cfg.MobileUX, "")
+	disabled := &repeatedFlag{values: cfg.DisabledPatches}
+	fs.Var(disabled, "disable-patch", "")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, err
@@ -117,6 +120,7 @@ func loadConfig(args []string, mode runMode) (*config.Config, error) {
 	cfg.SessionDays = *sessionDays
 	cfg.MobileUX = !*noMobile
 	cfg.TrustedProxies = splitCSV(*trustedProxies)
+	cfg.DisabledPatches = disabled.values
 
 	if mode == modeServe && len(cfg.TrustedProxies) == 0 && cfg.PublicURL != "" {
 		cfg.TrustedProxies = []string{"127.0.0.1/32", "::1/128"}
@@ -127,6 +131,25 @@ func loadConfig(args []string, mode runMode) (*config.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// repeatedFlag collects a flag given more than once. Passing it at all replaces
+// whatever config.json held, rather than adding to it, so a run is never stuck
+// with a value it cannot clear.
+type repeatedFlag struct {
+	values []string
+	given  bool
+}
+
+func (f *repeatedFlag) String() string { return strings.Join(f.values, ",") }
+
+func (f *repeatedFlag) Set(v string) error {
+	if !f.given {
+		f.values = nil
+		f.given = true
+	}
+	f.values = append(f.values, splitCSV(v)...)
+	return nil
 }
 
 func splitCSV(v string) []string {

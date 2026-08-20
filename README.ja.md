@@ -53,8 +53,8 @@ Antigravity を先に開く必要はない。起動していなければ `agy-re
 リモートコントロールを有効にし、language server を待って、どのポートが UI を配信して
 いるかを調べる。
 
-スマホでは共有 →「ホーム画面に追加」を使うといい。Antigravity のアイコンで、アドレス
-バー無しの全画面になる。
+スマホでは共有 →「ホーム画面に追加」を使うといい。ホーム画面に Antigravity の
+アイコンが並ぶ。
 
 バイナリにコード署名は無いので、ブラウザでアーカイブを落とすと OS が隔離する。macOS は
 右クリック → **開く** → もう一度 **開く**。Windows は **詳細情報** → **実行**。上の
@@ -90,7 +90,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## 何をパッチするか
 
-全部で 13 個。説明は
+全部で 14 個。説明は
 [`internal/patches/registry.go`](internal/patches/registry.go) にある。適用状況は
 `agy-remote doctor` で見る。
 
@@ -98,12 +98,13 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | --- | --- |
 | バンドルが `https://127.0.0.1:<port>` を呼ぶ。スマホではそれはスマホ自身 | ブラウザの origin を使う |
 | 文章の途中で Enter を押すと送信される | タッチでは Enter は改行、Cmd/Ctrl+Enter で送信 |
-| iOS のホームバーが入力欄に被る | `safe-area-inset-bottom` を反映、キーボード表示中は余白を消す |
 | モデルをタップすると medium で確定してメニューが閉じる | タップで推論レベルのサブメニューを開く |
 | 最初の返信のあとに「Enable Notifications」のバナーが出る | タッチ端末では出さない |
 | standalone に文字起こしは無いのにマイクボタンがある | 隠す |
 | 新規プロジェクトが `/` から始まる | 設定したワークスペースフォルダから始める |
-| アイコン無し、300ms のタップ遅延、ブラウザの枠 | アイコン、即時反応、manifest で全画面 |
+| アイコン無し、300ms のタップ遅延 | Antigravity のアイコン、即時反応 |
+| iOS ホームバーの被り・仮想キーボードでのビュー崩れ | Safe Area 余白対応とキーボード高さの同期 |
+| リモートブラウザから Google ログインできない | 設定のログインボタンを Web 認証フローへ接続 |
 
 素の UI が見たいときは `agy-remote --no-mobile-patches`。
 

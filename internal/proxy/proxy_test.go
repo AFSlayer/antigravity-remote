@@ -21,8 +21,9 @@ const stubBundle = "var a=1;" +
 	"get baseUrl(){return`https://127.0.0.1:${this.port}`}" +
 	"var b=2;"
 
-const indexHTML = `<!doctype html><html><head><title>Jetski Web</title></head>` +
-	`<body><div id="root"></div><script src="/main.js"></script></body></html>`
+const indexHTML = `<!doctype html><html><head><title>Jetski Web</title>` +
+	`<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />` +
+	`</head><body><div id="root"></div><script src="/main.js"></script></body></html>`
 
 func upstream(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -152,7 +153,7 @@ func TestProxyInjectsIntoHTML(t *testing.T) {
 
 	out := body(t, get(t, front.URL, "/", "text/html"))
 
-	for _, want := range []string{"agy-safe-area", "agy-keyboard-detect", "manifest.webmanifest", `src="/main.js?agy=k1"`} {
+	for _, want := range []string{"agy-touch-action", "agy-safe-area", "agy-keyboard-detect", "agy-signin-banner", `src="/main.js?agy=k1"`} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in patched HTML", want)
 		}
@@ -169,7 +170,7 @@ func TestProxyLeavesOtherContentAlone(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("unexpected status %d", resp.StatusCode)
 	}
-	if strings.Contains(body(t, resp), "agy-safe-area") {
+	if strings.Contains(body(t, resp), "agy-touch-action") {
 		t.Error("non-HTML asset must not be patched")
 	}
 }

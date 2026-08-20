@@ -56,7 +56,7 @@ Antigravity no tiene que estar abierto. Si no lo está, `agy-remote` lo arranca,
 el control remoto, espera al language server y averigua qué puerto sirve la interfaz.
 
 En el móvil usa Compartir → *Añadir a pantalla de inicio*. Queda con el icono de
-Antigravity, a pantalla completa y sin barra del navegador.
+Antigravity en la pantalla de inicio.
 
 Los binarios no están firmados, así que descargar el archivo desde el navegador lo
 deja en cuarentena. En macOS: clic derecho, **Abrir**, y **Abrir** otra vez. En
@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token tu@tu-servidor:~/.gemini/
 
 ## Qué se parchea
 
-Trece parches, descritos en
+Catorce parches, descritos en
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 dice cuáles se aplicaron.
 
@@ -102,12 +102,13 @@ dice cuáles se aplicaron.
 | --- | --- |
 | El bundle llama a `https://127.0.0.1:<port>`, que en el móvil es el móvil | Usar la origin del navegador |
 | Enter envía a media frase | En táctil, Enter es salto de línea y Cmd/Ctrl+Enter envía |
-| La barra inferior de iOS tapa el campo de texto | Respetar `safe-area-inset-bottom`, quitar el hueco con el teclado abierto |
 | Tocar un modelo elige medium y cierra el menú | Tocar abre el submenú de esfuerzo |
 | Banner "Enable Notifications" en la primera respuesta | No mostrarlo en pantallas táctiles |
 | Un botón de micrófono que no funciona, porque standalone no transcribe | Ocultarlo |
 | Los proyectos nuevos empiezan en `/` | Empezar en la carpeta de trabajo configurada |
-| Sin icono, retardo de 300 ms, marco del navegador | Icono, respuesta inmediata, manifest para pantalla completa |
+| Sin icono, retardo de 300 ms | El icono de Antigravity, respuesta inmediata |
+| Barra inferior de iOS y teclado virtual solapando la vista | Insets de Safe Area y sincronización de altura de teclado |
+| No se puede iniciar sesión con Google desde navegador remoto | Conectar el botón de inicio de sesión al flujo web |
 
 Para dejar la interfaz intacta, `agy-remote --no-mobile-patches`.
 

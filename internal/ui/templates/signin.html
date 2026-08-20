@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#111113" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Sign in to Antigravity</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: max(1.5rem, env(safe-area-inset-top)) 1.25rem
+          max(1.5rem, env(safe-area-inset-bottom));
+        background:
+          radial-gradient(120% 80% at 50% -10%, #24242a 0%, transparent 60%), #111113;
+        color: #f4f4f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.55;
+      }
+      .card {
+        width: 100%;
+        min-width: 0;
+        max-width: 26rem;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 1.25rem;
+        padding: 1.75rem 1.5rem;
+        box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.6);
+      }
+      h1 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+      }
+      .lede {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #a1a1aa;
+      }
+      ol {
+        margin: 1.5rem 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 1.1rem;
+        counter-reset: step;
+      }
+      li {
+        position: relative;
+        padding-left: 2.1rem;
+        counter-increment: step;
+      }
+      li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0.05rem;
+        display: grid;
+        place-items: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        background: rgb(79 124 255 / 0.16);
+        color: #93b0ff;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      li.done::before {
+        content: "✓";
+        background: rgb(34 197 94 / 0.16);
+        color: #4ade80;
+      }
+      .step-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .step-body {
+        margin-top: 0.3rem;
+        font-size: 0.85rem;
+        color: #a1a1aa;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 2.85rem;
+        margin-top: 0.7rem;
+        padding: 0 1rem;
+        border: 0;
+        border-radius: 0.7rem;
+        background: #4f7cff;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .btn:hover {
+        background: #3f6ae8;
+      }
+      .btn[aria-disabled="true"],
+      .btn:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .btn.ghost {
+        background: none;
+        border: 1px solid #3f3f46;
+        color: #e4e4e7;
+      }
+      textarea {
+        width: 100%;
+        margin-top: 0.7rem;
+        min-height: 4.5rem;
+        padding: 0.7rem 0.8rem;
+        background: #0c0c0e;
+        border: 1px solid #3f3f46;
+        border-radius: 0.7rem;
+        color: #fafafa;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem;
+        resize: vertical;
+        outline: none;
+      }
+      textarea:focus {
+        border-color: #4f7cff;
+        box-shadow: 0 0 0 3px rgb(79 124 255 / 0.2);
+      }
+      .msg {
+        margin-top: 0.9rem;
+        font-size: 0.82rem;
+        min-height: 1.1rem;
+      }
+      .msg.err {
+        color: #f87171;
+      }
+      .msg.ok {
+        color: #4ade80;
+      }
+      .note {
+        margin-top: 1.4rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid #232326;
+        font-size: 0.75rem;
+        color: #52525b;
+      }
+      .note code {
+        color: #71717a;
+        word-break: break-all;
+      }
+      .signed-in {
+        text-align: center;
+      }
+      .signed-in .mark {
+        font-size: 2.2rem;
+        color: #4ade80;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      {{ if .SignedIn }}
+      <div class="signed-in">
+        <div class="mark">✓</div>
+        <h1 style="margin-top: 0.6rem">Already signed in</h1>
+        <p class="lede">Antigravity has valid credentials on this machine.</p>
+        <a class="btn ghost" href="/">Back to Antigravity</a>
+      </div>
+
+      {{ else if not .Available }}
+      <h1>Sign in on this machine</h1>
+      <p class="lede">
+        This instance is attached to a language server that agy-remote did not
+        start, so it cannot drive the sign-in flow. Sign in through the Antigravity
+        desktop app instead.
+      </p>
+      <a class="btn ghost" href="/">Back to Antigravity</a>
+
+      {{ else }}
+      <h1>Sign in to Antigravity</h1>
+      <p class="lede">
+        Antigravity's own Sign In button cannot work over the network, so this does
+        it instead. Three taps.
+      </p>
+
+      <ol id="steps">
+        <li id="step-1">
+          <div class="step-title">Open the Google page</div>
+          <div class="step-body" id="prepare-note">Preparing…</div>
+          <a class="btn" id="google-link" aria-disabled="true" target="_blank" rel="noreferrer"
+            >Continue to Google</a
+          >
+        </li>
+        <li id="step-2">
+          <div class="step-title">Sign in, then copy the address</div>
+          <div class="step-body">
+            The page will fail to load with something like "cannot connect". That is
+            expected. Copy the whole address from the address bar.
+          </div>
+        </li>
+        <li id="step-3">
+          <div class="step-title">Paste it here</div>
+          <textarea
+            id="pasted"
+            placeholder="http://localhost:12345/auth/callback?state=…&amp;code=…"
+            autocapitalize="off"
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+          <button class="btn" id="finish">Finish sign-in</button>
+        </li>
+      </ol>
+
+      <p class="msg" id="msg" role="status"></p>
+
+      <div class="note">
+        Nothing is sent anywhere except Google and the Antigravity language server
+        on this host. The address you paste contains a single-use code.
+      </div>
+      {{ end }}
+    </main>
+
+    {{ if and (not .SignedIn) .Available }}
+    <script>
+      const link = document.getElementById("google-link");
+      const note = document.getElementById("prepare-note");
+      const msg = document.getElementById("msg");
+      const finish = document.getElementById("finish");
+      const pasted = document.getElementById("pasted");
+
+      function say(text, kind) {
+        msg.textContent = text;
+        msg.className = "msg" + (kind ? " " + kind : "");
+      }
+
+      async function post(path, body) {
+        const res = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body || {}),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Request failed");
+        return data;
+      }
+
+      (async () => {
+        try {
+          const data = await post("/__agy/api/signin/begin");
+          if (data.signedIn) {
+            location.reload();
+            return;
+          }
+          link.href = data.authUrl;
+          link.removeAttribute("aria-disabled");
+          note.textContent = "Opens in a new tab. Come back here afterwards.";
+          document.getElementById("step-1").classList.add("done");
+        } catch (err) {
+          note.textContent = "";
+          say(err.message, "err");
+        }
+      })();
+
+      finish.addEventListener("click", async () => {
+        const value = pasted.value.trim();
+        if (!value) {
+          say("Paste the address you were redirected to.", "err");
+          return;
+        }
+
+        finish.disabled = true;
+        say("Finishing…");
+
+        try {
+          await post("/__agy/api/signin/complete", { pasted: value });
+          document.getElementById("step-3").classList.add("done");
+          say("Signed in. Reload Antigravity to start using it.", "ok");
+          finish.textContent = "Done";
+          setTimeout(() => location.replace("/"), 1800);
+        } catch (err) {
+          say(err.message, "err");
+          finish.disabled = false;
+        }
+      });
+    </script>
+    {{ end }}
+  </body>
+</html>

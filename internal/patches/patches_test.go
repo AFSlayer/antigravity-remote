@@ -25,13 +25,20 @@ func syntheticBundle() []byte {
 		case Literal:
 			buf.WriteString(p.Find)
 		case Regexp:
-			buf.WriteString(",onClick:()=>{var y=\nv.byEffort.get(w);y&&b(y)}")
+			buf.WriteString(regexpFixtures[p.ID])
 		}
 		buf.WriteString("\nfiller++;\n")
 	}
 	buf.WriteString("})();\n")
 
 	return buf.Bytes()
+}
+
+// regexpFixtures supplies a synthetic match for each regexp patch, since a
+// regexp has no literal to reuse.
+var regexpFixtures = map[string]string{
+	"model-effort-submenu": ",onClick:()=>{var y=\nv.byEffort.get(w);y&&b(y)}",
+	"sign-in-button":       `rightElement:x.createElement(tz,{variant:"primary",onClick:()=>` + "\n" + `b.showLoginFlow()},"Sign In")`,
 }
 
 func fullOptions() Options {
@@ -96,6 +103,12 @@ func TestPatchedContentIsCorrect(t *testing.T) {
 	if strings.Contains(body, `v.byEffort.get(w);y&&b(y)}`) {
 		t.Error("model-effort onClick handler was not removed")
 	}
+	if !strings.Contains(body, `onClick:()=>{window.location.href="/__agy/signin"}`) {
+		t.Error("sign-in button was not redirected")
+	}
+	if strings.Contains(body, "showLoginFlow()") {
+		t.Error("stub showLoginFlow call still wired to the button")
+	}
 	if strings.Contains(body, `RK({to:"/onboarding"`) {
 		t.Error("onboarding redirect was not removed")
 	}
@@ -137,7 +150,9 @@ func TestMissingAnchorIsReported(t *testing.T) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	html := []byte(`<!doctype html><html><head><title>x</title></head><body><script src="/main.js"></script></body></html>`)
+	html := []byte(`<!doctype html><html><head><title>x</title>` +
+		`<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />` +
+		`</head><body><script src="/main.js"></script></body></html>`)
 	out, report := Apply(HTML, html, fullOptions())
 	body := string(out)
 
@@ -146,10 +161,11 @@ func TestHTMLInjection(t *testing.T) {
 	}
 
 	want := []string{
-		`rel="manifest" href="/__agy/manifest.webmanifest"`,
+		`id="agy-touch-action"`,
 		`id="agy-safe-area"`,
 		`id="agy-keyboard-detect"`,
-		`id="agy-touch-action"`,
+		`id="agy-signin-banner"`,
+		`/__agy/api/signin/status`,
 		`href="/apple-touch-icon.png"`,
 		`src="/main.js?agy=testkey"`,
 	}
@@ -159,14 +175,19 @@ func TestHTMLInjection(t *testing.T) {
 		}
 	}
 
-	if strings.Index(body, "agy-safe-area") > strings.Index(body, "</head>") {
+	if strings.Index(body, "agy-touch-action") > strings.Index(body, "</head>") {
 		t.Error("injected styles must land inside <head>")
 	}
 }
 
 func TestHTMLWithoutHeadStillInjects(t *testing.T) {
-	out, _ := Apply(HTML, []byte(`<div id="root"></div>`), fullOptions())
-	if !strings.Contains(string(out), "agy-safe-area") {
+	out, report := Apply(HTML, []byte(`<div id="root"></div>`), fullOptions())
+	for _, r := range report.Missing() {
+		if r.ID != "cache-bust" {
+			t.Errorf("unexpected missing patch %s", r.ID)
+		}
+	}
+	if !strings.Contains(string(out), "agy-touch-action") {
 		t.Error("expected injection to fall back to prepending")
 	}
 }
@@ -212,6 +233,9 @@ func TestEveryPatchIsWellFormed(t *testing.T) {
 		case Regexp:
 			if p.FindRe == nil {
 				t.Errorf("%s: regexp patch needs FindRe", p.ID)
+			}
+			if regexpFixtures[p.ID] == "" {
+				t.Errorf("%s: regexp patch needs an entry in regexpFixtures", p.ID)
 			}
 		case InjectHead:
 			if p.Replace == "" && p.ReplaceFn == nil {

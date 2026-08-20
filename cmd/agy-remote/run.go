@@ -22,6 +22,7 @@ import (
 	"github.com/AFSlayer/antigravity-remote/internal/netinfo"
 	"github.com/AFSlayer/antigravity-remote/internal/patches"
 	"github.com/AFSlayer/antigravity-remote/internal/proxy"
+	"github.com/AFSlayer/antigravity-remote/internal/signin"
 	"github.com/AFSlayer/antigravity-remote/internal/ui"
 )
 
@@ -44,6 +45,10 @@ type runner struct {
 	cfg  *config.Config
 
 	firstRun bool
+
+	// shimURLFile is set only when we started the language server ourselves, which
+	// is what lets the sign-in page drive its OAuth flow.
+	shimURLFile string
 
 	mu                sync.Mutex
 	generatedPassword string
@@ -86,10 +91,6 @@ func (r *runner) start() error {
 
 	r.syncRemoteControlSetting()
 
-	if r.mode == modeServe {
-		r.warnIfNotSignedIn()
-	}
-
 	instance, err := r.resolveLanguageServer()
 	if err != nil {
 		return err
@@ -101,6 +102,8 @@ func (r *runner) start() error {
 	patchOpts := patches.Options{
 		MobileUX:      r.cfg.MobileUX,
 		WorkspaceRoot: r.cfg.WorkspaceRoot,
+		Disabled:      r.cfg.DisabledPatchSet(),
+		Debug:         r.cfg.Debug,
 	}
 	patchOpts.CacheKey = patches.CacheKey(version, patchOpts)
 
@@ -144,6 +147,15 @@ func (r *runner) start() error {
 	for _, path := range assets.Paths() {
 		publicMux.Handle(path, assets.Handler())
 	}
+	ui.NewSignIn(signin.New(instance, r.shimURLFile)).Register(publicMux)
+	if r.cfg.Debug {
+		if debug, err := ui.NewDebug(r.cfg.Path("mobile-debug.log")); err != nil {
+			warn("could not open the mobile debug log: %v", err)
+		} else {
+			debug.Register(publicMux)
+			info("Mobile debug tracing on, writing to %s", dim(debug.Path()))
+		}
+	}
 	publicMux.Handle("/", p.Handler())
 
 	shutdown := make(chan struct{})
@@ -170,7 +182,12 @@ func (r *runner) start() error {
 	go func() { _ = localServer.Serve(localListener) }()
 
 	controlURL := fmt.Sprintf("http://127.0.0.1:%d/", localPort)
-	r.printReady(publicPort, controlURL, generated)
+
+	statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	signedIn := instance.SignedIn(statusCtx)
+	statusCancel()
+
+	r.printReady(publicPort, controlURL, generated, signedIn)
 
 	if r.mode == modeLocal {
 		go openBrowser(controlURL)
@@ -228,24 +245,6 @@ func (r *runner) syncRemoteControlSetting() {
 	}
 }
 
-func (r *runner) warnIfNotSignedIn() {
-	geminiDir := config.GeminiDir()
-	if lsproc.HasStandaloneToken(geminiDir) {
-		return
-	}
-
-	fmt.Println()
-	warn("This machine is not signed in to Antigravity yet.")
-	info("  %s Antigravity signs in through a browser callback on localhost, which a", dim("→"))
-	info("  %s remote server cannot receive. Copy the token from a computer where you", dim(" "))
-	info("  %s already use the Antigravity desktop app:", dim(" "))
-	fmt.Println()
-	info("      %s", cyan(fmt.Sprintf("scp ~/.gemini/%s USER@THIS_HOST:%s", lsproc.StandaloneTokenFile, geminiDir+"/")))
-	fmt.Println()
-	info("  %s Then restart agy-remote. Until you do, the UI will ask you to sign in.", dim("→"))
-	fmt.Println()
-}
-
 func (r *runner) resolveLanguageServer() (*lsproc.Instance, error) {
 	ctx := context.Background()
 
@@ -294,14 +293,25 @@ func (r *runner) resolveHeadless(ctx context.Context) (*lsproc.Instance, error) 
 		return nil, err
 	}
 
+	shimDir := r.cfg.Path("browser-shim")
+	urlFile := r.cfg.Path("auth-url.txt")
+	if err := lsproc.WriteBrowserShim(shimDir, urlFile); err != nil {
+		warn("could not install the sign-in helper: %v", err)
+		shimDir = ""
+	}
+
 	cmd, err := lsproc.LaunchHeadless(lsproc.HeadlessOptions{
-		BinaryPath: binary,
-		CSRFToken:  lsproc.NewCSRFToken(),
-		IDEVersion: r.cfg.IDEVersion,
-		LogWriter:  logFile,
+		BinaryPath:     binary,
+		CSRFToken:      lsproc.NewCSRFToken(),
+		IDEVersion:     r.cfg.IDEVersion,
+		LogWriter:      logFile,
+		BrowserShimDir: shimDir,
 	})
 	if err != nil {
 		return nil, err
+	}
+	if shimDir != "" {
+		r.shimURLFile = urlFile
 	}
 
 	return r.waitForServer(ctx, 120*time.Second, lsproc.Filter{PID: cmd.Process.Pid}, logPath)
@@ -383,7 +393,7 @@ func (r *runner) resetPassword(creds *auth.Credentials) (string, error) {
 	return password, nil
 }
 
-func (r *runner) printReady(publicPort int, controlURL, generated string) {
+func (r *runner) printReady(publicPort int, controlURL, generated string, signedIn bool) {
 	fmt.Println()
 	step("%s ready", bold(r.mode.String()))
 	fmt.Println()
@@ -407,6 +417,16 @@ func (r *runner) printReady(publicPort int, controlURL, generated string) {
 	info("Control panel  %s", cyan(controlURL))
 	if r.mode == modeLocal {
 		info("%s", dim("Scan the QR code there to sign in on your phone without typing."))
+	}
+
+	if !signedIn {
+		fmt.Println()
+		warn("Antigravity is not signed in to Google yet.")
+		info("%s Open %s and follow the three steps.", dim("→"),
+			cyan(r.loginBaseURL(publicPort)+ui.SignInPath))
+		if r.shimURLFile == "" {
+			info("%s Sign-in cannot be driven here, so use the Antigravity desktop app.", dim("→"))
+		}
 	}
 
 	fmt.Println()

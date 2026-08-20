@@ -56,7 +56,7 @@ liga o controle remoto, espera o language server e descobre qual porta serve a
 interface.
 
 No celular use Compartilhar → *Adicionar à Tela de Início*. Fica com o ícone do
-Antigravity, em tela cheia e sem barra do navegador.
+Antigravity na tela de início.
 
 Os binários não são assinados, então baixar o arquivo pelo navegador deixa ele em
 quarentena. No macOS: clique com o botão direito, **Abrir**, e **Abrir** de novo. No
@@ -94,7 +94,7 @@ O `agy-remote` mostra esse comando quando o token está faltando.
 
 ## O que é modificado
 
-Treze patches, descritos em
+Quatorze patches, descritos em
 [`internal/patches/registry.go`](internal/patches/registry.go). O `agy-remote doctor`
 diz quais foram aplicados.
 
@@ -102,12 +102,13 @@ diz quais foram aplicados.
 | --- | --- |
 | O bundle chama `https://127.0.0.1:<port>`, que no celular é o próprio celular | Usar a origin do navegador |
 | Enter envia no meio da frase | No toque, Enter é nova linha e Cmd/Ctrl+Enter envia |
-| A barra inferior do iOS cobre o campo de texto | Respeitar `safe-area-inset-bottom`, tirar o espaço com o teclado aberto |
 | Tocar num modelo escolhe medium e fecha o menu | Tocar abre o submenu de esforço |
 | Banner "Enable Notifications" na primeira resposta | Não mostrar em telas de toque |
 | Botão de microfone que não funciona, já que standalone não transcreve | Esconder |
 | Projetos novos começam em `/` | Começar na pasta de trabalho configurada |
-| Sem ícone, atraso de 300 ms, moldura do navegador | Ícone, toque imediato, manifest para tela cheia |
+| Sem ícone, atraso de 300 ms | O ícone do Antigravity, toque imediato |
+| Barra inferior do iOS e teclado virtual empurrando a tela | Insets de Safe Area e sincronização de altura de teclado |
+| Não é possível fazer login com o Google pelo navegador remoto | Direcionar o botão de login para o fluxo web |
 
 Para a interface intacta, `agy-remote --no-mobile-patches`.
 
