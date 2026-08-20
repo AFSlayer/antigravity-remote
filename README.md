@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## What gets patched
 
-Thirteen patches, each described in
+Fourteen patches, each described in
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 says which applied.
 
@@ -107,6 +107,8 @@ says which applied.
 | A mic button that can't work, since standalone has no transcription | Hide it |
 | New projects start in `/` | Start in the workspace folder you set |
 | No icon, 300 ms tap delay | The Antigravity icon, instant taps |
+| iOS home bar overlap & virtual keyboard pushing view offscreen | Safe area insets & viewport height sync |
+| Standalone build cannot sign in from a remote browser | Connect Settings sign-in button to web auth flow |
 
 `agy-remote --no-mobile-patches` leaves the UI alone.
 

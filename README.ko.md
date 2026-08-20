@@ -88,7 +88,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## 뭘 패치하나
 
-13개. 각각 설명이 [`internal/patches/registry.go`](internal/patches/registry.go)에
+14개. 각각 설명이 [`internal/patches/registry.go`](internal/patches/registry.go)에
 있다. 어떤 게 적용됐는지는 `agy-remote doctor`로 본다.
 
 | 문제 | 패치 |
@@ -100,6 +100,8 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | 스탠드얼론에는 전사가 없는데 마이크 버튼이 있다 | 숨긴다 |
 | 새 프로젝트가 `/`에서 시작한다 | 지정한 워크스페이스 폴더에서 시작 |
 | 아이콘 없음, 300ms 탭 지연 | Antigravity 아이콘, 즉시 반응 |
+| iOS 홈 바 가림 및 가상 키보드 뷰포트 밀림 현상 | Safe Area 여백 적용 및 키보드 높이 동기화 |
+| 원격 브라우저에서 Google 로그인 불가 | 설정의 로그인 버튼을 웹 인증 화면으로 연결 |
 
 원본 그대로 보려면 `agy-remote --no-mobile-patches`.
 

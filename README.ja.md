@@ -90,7 +90,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## 何をパッチするか
 
-全部で 13 個。説明は
+全部で 14 個。説明は
 [`internal/patches/registry.go`](internal/patches/registry.go) にある。適用状況は
 `agy-remote doctor` で見る。
 
@@ -103,6 +103,8 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | standalone に文字起こしは無いのにマイクボタンがある | 隠す |
 | 新規プロジェクトが `/` から始まる | 設定したワークスペースフォルダから始める |
 | アイコン無し、300ms のタップ遅延 | Antigravity のアイコン、即時反応 |
+| iOS ホームバーの被り・仮想キーボードでのビュー崩れ | Safe Area 余白対応とキーボード高さの同期 |
+| リモートブラウザから Google ログインできない | 設定のログインボタンを Web 認証フローへ接続 |
 
 素の UI が見たいときは `agy-remote --no-mobile-patches`。
 

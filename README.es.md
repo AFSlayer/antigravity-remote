@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token tu@tu-servidor:~/.gemini/
 
 ## Qué se parchea
 
-Trece parches, descritos en
+Catorce parches, descritos en
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 dice cuáles se aplicaron.
 
@@ -107,6 +107,8 @@ dice cuáles se aplicaron.
 | Un botón de micrófono que no funciona, porque standalone no transcribe | Ocultarlo |
 | Los proyectos nuevos empiezan en `/` | Empezar en la carpeta de trabajo configurada |
 | Sin icono, retardo de 300 ms | El icono de Antigravity, respuesta inmediata |
+| Barra inferior de iOS y teclado virtual solapando la vista | Insets de Safe Area y sincronización de altura de teclado |
+| No se puede iniciar sesión con Google desde navegador remoto | Conectar el botón de inicio de sesión al flujo web |
 
 Para dejar la interfaz intacta, `agy-remote --no-mobile-patches`.
 

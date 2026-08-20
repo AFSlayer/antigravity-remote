@@ -83,7 +83,7 @@ token 缺失时 `agy-remote` 会把这条命令打出来。
 
 ## 打了哪些补丁
 
-一共 13 个，说明都在
+一共 14 个，说明都在
 [`internal/patches/registry.go`](internal/patches/registry.go)。用 `agy-remote doctor`
 看哪些生效了。
 
@@ -96,6 +96,8 @@ token 缺失时 `agy-remote` 会把这条命令打出来。
 | standalone 没有语音转写，麦克风按钮却还在 | 隐藏 |
 | 新建项目从 `/` 开始 | 从配置的工作目录开始 |
 | 没图标、300ms 点击延迟 | Antigravity 图标、即时响应 |
+| iOS 底部横条遮挡及虚拟键盘顶出视口 | 适配 Safe Area 并同步虚拟键盘高度 |
+| 远程浏览器中无法完成 Google 登录 | 将设置界面的登录按钮重定向至 Web 认证页面 |
 
 想看原样界面用 `agy-remote --no-mobile-patches`。
 

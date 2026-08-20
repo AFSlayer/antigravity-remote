@@ -94,7 +94,7 @@ O `agy-remote` mostra esse comando quando o token está faltando.
 
 ## O que é modificado
 
-Treze patches, descritos em
+Quatorze patches, descritos em
 [`internal/patches/registry.go`](internal/patches/registry.go). O `agy-remote doctor`
 diz quais foram aplicados.
 
@@ -107,6 +107,8 @@ diz quais foram aplicados.
 | Botão de microfone que não funciona, já que standalone não transcreve | Esconder |
 | Projetos novos começam em `/` | Começar na pasta de trabalho configurada |
 | Sem ícone, atraso de 300 ms | O ícone do Antigravity, toque imediato |
+| Barra inferior do iOS e teclado virtual empurrando a tela | Insets de Safe Area e sincronização de altura de teclado |
+| Não é possível fazer login com o Google pelo navegador remoto | Direcionar o botão de login para o fluxo web |
 
 Para a interface intacta, `agy-remote --no-mobile-patches`.
 
