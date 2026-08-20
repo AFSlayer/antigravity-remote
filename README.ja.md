@@ -90,7 +90,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## 何をパッチするか
 
-全部で 14 個。説明は
+全部で 19 個。説明は
 [`internal/patches/registry.go`](internal/patches/registry.go) にある。適用状況は
 `agy-remote doctor` で見る。
 
@@ -101,6 +101,8 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | モデルをタップすると medium で確定してメニューが閉じる | タップで推論レベルのサブメニューを開く |
 | 最初の返信のあとに「Enable Notifications」のバナーが出る | タッチ端末では出さない |
 | standalone に文字起こしは無いのにマイクボタンがある | 隠す |
+| モバイル上部バーの機能しないユーザープロファイルアイコン | 非表示にする |
+| モバイルで `+` をタップしても会話一覧のまま | 新規会話作成画面へ即座に遷移し、戻るボタンを統合 |
 | 新規プロジェクトが `/` から始まる | 設定したワークスペースフォルダから始める |
 | アイコン無し、300ms のタップ遅延 | Antigravity のアイコン、即時反応 |
 | iOS ホームバーの被り・仮想キーボードでのビュー崩れ | Safe Area 余白対応とキーボード高さの同期 |

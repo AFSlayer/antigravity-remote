@@ -94,7 +94,7 @@ O `agy-remote` mostra esse comando quando o token está faltando.
 
 ## O que é modificado
 
-Quatorze patches, descritos em
+Dezenove patches, descritos em
 [`internal/patches/registry.go`](internal/patches/registry.go). O `agy-remote doctor`
 diz quais foram aplicados.
 
@@ -105,6 +105,8 @@ diz quais foram aplicados.
 | Tocar num modelo escolhe medium e fecha o menu | Tocar abre o submenu de esforço |
 | Banner "Enable Notifications" na primeira resposta | Não mostrar em telas de toque |
 | Botão de microfone que não funciona, já que standalone não transcreve | Esconder |
+| Ícone de perfil de usuário inoperante no cabeçalho móvel | Ocultar |
+| Tocar em `+` no celular fica na lista de conversas | Abrir a tela de nova conversa e integrar navegação de retorno |
 | Projetos novos começam em `/` | Começar na pasta de trabalho configurada |
 | Sem ícone, atraso de 300 ms | O ícone do Antigravity, toque imediato |
 | Barra inferior do iOS e teclado virtual empurrando a tela | Insets de Safe Area e sincronização de altura de teclado |

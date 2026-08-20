@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token tu@tu-servidor:~/.gemini/
 
 ## Qué se parchea
 
-Catorce parches, descritos en
+Diecinueve parches, descritos en
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 dice cuáles se aplicaron.
 
@@ -105,6 +105,8 @@ dice cuáles se aplicaron.
 | Tocar un modelo elige medium y cierra el menú | Tocar abre el submenú de esfuerzo |
 | Banner "Enable Notifications" en la primera respuesta | No mostrarlo en pantallas táctiles |
 | Un botón de micrófono que no funciona, porque standalone no transcribe | Ocultarlo |
+| Icono de perfil de usuario sin función en el encabezado móvil | Ocultarlo |
+| Tocar `+` en móvil se queda en la lista de conversaciones | Abrir la vista de nueva conversación e integrar navegación atrás |
 | Los proyectos nuevos empiezan en `/` | Empezar en la carpeta de trabajo configurada |
 | Sin icono, retardo de 300 ms | El icono de Antigravity, respuesta inmediata |
 | Barra inferior de iOS y teclado virtual solapando la vista | Insets de Safe Area y sincronización de altura de teclado |

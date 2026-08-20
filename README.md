@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## What gets patched
 
-Fourteen patches, each described in
+Nineteen patches, each described in
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 says which applied.
 
@@ -105,6 +105,8 @@ says which applied.
 | Tapping a model picks medium and closes the menu | Tap opens the effort submenu |
 | "Enable Notifications" banner on the first reply | Skip it on touch devices |
 | A mic button that can't work, since standalone has no transcription | Hide it |
+| Dead user profile placeholder icon in the mobile titlebar | Hide it |
+| Tapping `+` on mobile doesn't open a dedicated composer | Open new conversation view directly & integrate back button in mobile titlebar |
 | New projects start in `/` | Start in the workspace folder you set |
 | No icon, 300 ms tap delay | The Antigravity icon, instant taps |
 | iOS home bar overlap & virtual keyboard pushing view offscreen | Safe area insets & viewport height sync |

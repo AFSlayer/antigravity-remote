@@ -88,7 +88,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## 뭘 패치하나
 
-14개. 각각 설명이 [`internal/patches/registry.go`](internal/patches/registry.go)에
+19개. 각각 설명이 [`internal/patches/registry.go`](internal/patches/registry.go)에
 있다. 어떤 게 적용됐는지는 `agy-remote doctor`로 본다.
 
 | 문제 | 패치 |
@@ -98,6 +98,8 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 | 모델을 탭하면 medium으로 선택되고 팝업이 닫힌다 | 탭하면 추론 단계 서브메뉴가 열린다 |
 | 첫 답변 뒤 "Enable Notifications" 배너가 뜬다 | 터치 기기에서는 건너뛴다 |
 | 스탠드얼론에는 전사가 없는데 마이크 버튼이 있다 | 숨긴다 |
+| 모바일 상단 바에 미작동 사용자 프로필 더미 아이콘이 있다 | 숨긴다 |
+| 모바일에서 `+` 터치 시 대화 목록에 머무르고 입력창만 포커스된다 | 깔끔한 새 대화 화면으로 즉시 진입 및 상단 뒤로가기 연동 |
 | 새 프로젝트가 `/`에서 시작한다 | 지정한 워크스페이스 폴더에서 시작 |
 | 아이콘 없음, 300ms 탭 지연 | Antigravity 아이콘, 즉시 반응 |
 | iOS 홈 바 가림 및 가상 키보드 뷰포트 밀림 현상 | Safe Area 여백 적용 및 키보드 높이 동기화 |
