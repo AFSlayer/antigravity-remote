@@ -91,8 +91,12 @@ func TestPatchedContentIsCorrect(t *testing.T) {
 		`window.location.origin`,
 		`window.matchMedia("(pointer:coarse)")`,
 		`var vz=function(){return null};var vzDisabled=(`,
+		`function wmb(){return null};function wmbDisabled(`,
 		`initialPath:b?b.fsPath:"/home/ubuntu/workspace",fetchDirectoryContents:`,
 		`var e=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService`,
+		`isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec)`,
+		`!a.location.search?.section`,
+		`onClick:()=>c({clearSection:!0})`,
 	}
 	for _, w := range want {
 		if !strings.Contains(body, w) {

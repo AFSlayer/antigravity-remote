@@ -233,6 +233,8 @@ func CacheKey(version string, opts Options) string {
 		}
 		h.Write([]byte(p.ID))
 		h.Write([]byte{0})
+		h.Write([]byte(p.replacement(opts)))
+		h.Write([]byte{0})
 	}
 
 	return hex.EncodeToString(h.Sum(nil))[:12]

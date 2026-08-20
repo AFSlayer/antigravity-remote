@@ -78,6 +78,17 @@ func All() []Patch {
 			Find:    `uz.displayName="GutterHoverCommentButton";var vz=(`,
 			Replace: `uz.displayName="GutterHoverCommentButton";var vz=function(){return null};var vzDisabled=(`,
 		},
+		// The titlebar user profile icon is a dead placeholder in standalone mode.
+		// Replacing the component with a function returning null hides it cleanly.
+		{
+			ID:      "hide-user-profile-button",
+			Desc:    "Hide the non-functional user profile placeholder button on mobile",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `function wmb({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+			Replace: `function wmb(){return null};function wmbDisabled({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+		},
 		// Google's standalone build cannot sign in from a browser: its auth service
 		// is a stub, and its OAuth client only accepts loopback redirect URIs. Point
 		// the button at a page that can actually complete the flow instead of
@@ -103,6 +114,40 @@ func All() []Patch {
 			Enabled: mobile,
 			Find:    `var e=!!this.storageService.get("didAskForNotificationPermission");`,
 			Replace: `var e=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService.get("didAskForNotificationPermission");`,
+		},
+
+		// When a project or standalone section is selected on touch devices (e.g. via + button),
+		// show the empty conversation view and composer directly rather than the full list.
+		// Uses replace:true for the optimistic conversation creation so history back returns to the list.
+		{
+			ID:      "mobile-new-convo-view",
+			Desc:    "Show the empty conversation composer view on touch devices when a project is selected",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `const tub=()=>{var a=yM(),b=IT();return(0,x.useCallback)((c,e)=>{b(HT.map(f=>({trigger:f,ran:!1})));a(c,{section:e})},[a,b])};` + "\n" + `var uub=()=>{var a=tub(),{q:b}=dM({strict:!1});return x.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},x.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},x.createElement(sub,{surface:"background"})),x.createElement("div",{className:"shrink-0 p-2"},x.createElement(e_,{cascadeId:void 0},x.createElement(b_,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,` + "\n" + `aboveContent:x.createElement(s_,null),initialQuery:b}))))};`,
+			Replace: `const tub=()=>{var a=yM(),b=IT();return(0,x.useCallback)((c,e)=>{b(HT.map(f=>({trigger:f,ran:!1})));a(c,{section:e,replace:!0})},[a,b])};var uub=()=>{var a=tub(),{q:b,section:sec}=dM({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return x.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?x.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},x.createElement(T,{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),x.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):x.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},x.createElement(sub,{surface:"background"})),x.createElement("div",{className:"shrink-0 p-2"},x.createElement(e_,{cascadeId:void 0},x.createElement(b_,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:x.createElement(s_,null),initialQuery:b}))))};`,
+		},
+
+		// On mobile, show the back button in the main titlebar when a project is selected
+		// and ensure back navigation always clears the active section.
+		{
+			ID:      "mobile-new-convo-header",
+			Desc:    "Show the back button in the titlebar when in new conversation mode and clear section on back",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `CM=()=>QL({select:a=>a.location.pathname==="/"})`,
+			Replace: `CM=()=>QL({select:a=>a.location.pathname==="/"&&!a.location.search?.section})`,
+		},
+		{
+			ID:      "mobile-back-clears-section",
+			Desc:    "Ensure the mobile back button always clears the selected section to return to the root conversation list",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c(),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
+			Replace: `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c({clearSection:!0}),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
 		},
 
 		// Only the fallback is replaced: when a workspace is already open the
