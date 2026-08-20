@@ -78,6 +78,17 @@ func All() []Patch {
 			Find:    `uz.displayName="GutterHoverCommentButton";var vz=(`,
 			Replace: `uz.displayName="GutterHoverCommentButton";var vz=function(){return null};var vzDisabled=(`,
 		},
+		// The titlebar user profile icon is a dead placeholder in standalone mode.
+		// Replacing the component with a function returning null hides it cleanly.
+		{
+			ID:      "hide-user-profile-button",
+			Desc:    "Hide the non-functional user profile placeholder button on mobile",
+			Target:  MainJS,
+			Kind:    Literal,
+			Enabled: mobile,
+			Find:    `function wmb({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+			Replace: `function wmb(){return null};function wmbDisabled({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+		},
 		// Google's standalone build cannot sign in from a browser: its auth service
 		// is a stub, and its OAuth client only accepts loopback redirect URIs. Point
 		// the button at a page that can actually complete the flow instead of
