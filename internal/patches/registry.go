@@ -150,8 +150,8 @@ func All() []Patch {
 			Replace: `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c({clearSection:!0}),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
 		},
 
-		// Only the fallback is replaced: when a workspace is already open the
-		// picker keeps starting from it.
+		// Always start the folder picker at the configured workspace root instead of
+		// falling back to homeDirUri (b).
 		{
 			ID:     "folder-picker-initial-path",
 			Desc:   "Start the folder picker at the configured workspace root",
@@ -162,7 +162,7 @@ func All() []Patch {
 			},
 			Find: `initialPath:b?b.fsPath:Sf?"C:/":"/",fetchDirectoryContents:`,
 			ReplaceFn: func(o Options) string {
-				return `initialPath:b?b.fsPath:` + jsString(o.WorkspaceRoot) + `,fetchDirectoryContents:`
+				return `initialPath:` + jsString(o.WorkspaceRoot) + `,fetchDirectoryContents:`
 			},
 		},
 
