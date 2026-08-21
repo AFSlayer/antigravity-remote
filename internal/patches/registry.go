@@ -65,7 +65,7 @@ func All() []Patch {
 			Kind:     Regexp,
 			Required: true,
 			FindRe:   skipOnboardingRe,
-			Replace:  `void 0`,
+			Replace:  `return null`,
 		},
 		// Returning false from the Lexical ENTER command handler lets the editor
 		// insert its default newline. There are three registerCommand(FE, ...)
@@ -153,7 +153,7 @@ func All() []Patch {
 			Kind:    Regexp,
 			Enabled: mobile,
 			FindRe:  mobileNewConvoViewRe,
-			Replace: `var $2=()=>{var a=$3(),b=$4();return(0,$5.useCallback)((c,$6)=>{b($7.map(f=>({trigger:f,ran:!1})));a(c,{section:$6,replace:!0})},[a,b])};var $8=()=>{var a=$2(),{q:b,section:sec}=$9({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return $10.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?$10.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},$10.createElement(typeof T!=="undefined"?T:typeof U!=="undefined"?U:"span",{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),$10.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):$10.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},$10.createElement($13,{surface:"background"})),$10.createElement("div",{className:"shrink-0 p-2"},$10.createElement($15,{cascadeId:void 0},$10.createElement($17,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:$18.createElement($19,null),initialQuery:b}))))};`,
+			Replace: `var $2=()=>{var a=$3(),b=$4();return(0,$5.useCallback)((c,$6)=>{b($7.map(f=>({trigger:f,ran:!1})));a(c,{section:$6,replace:!0})},[a,b])};var $8=()=>{var a=$2(),{q:b,section:sec}=$9({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return $10.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?$10.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},$10.createElement(typeof T!=="undefined"?T:typeof U!=="undefined"?U:"span",{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),$10.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):$10.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},$10.createElement($13,{surface:"background"})),$10.createElement("div",{className:"shrink-0 p-2"},$10.createElement($16,{cascadeId:void 0},$10.createElement($18,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:$10.createElement($20,null),initialQuery:b}))))};`,
 		},
 
 		// On mobile, show the back button in the main titlebar when a project is selected

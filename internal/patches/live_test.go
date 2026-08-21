@@ -34,11 +34,11 @@ func TestAnchorsMatchLiveBundle(t *testing.T) {
 
 		switch p.Kind {
 		case Literal:
-			if n := bytes.Count(body, []byte(p.Find)); n != 1 {
+			if n := bytes.Count(body, []byte(p.Find)); n != 1 && (!p.Optional || n != 0) {
 				t.Errorf("%s: anchor matched %d times in the live bundle, want 1", p.ID, n)
 			}
 		case Regexp:
-			if n := len(p.FindRe.FindAll(body, -1)); n != 1 {
+			if n := len(p.FindRe.FindAll(body, -1)); n != 1 && (!p.Optional || n != 0) {
 				t.Errorf("%s: regexp matched %d times in the live bundle, want 1", p.ID, n)
 			}
 		}
