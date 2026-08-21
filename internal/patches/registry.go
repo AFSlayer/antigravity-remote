@@ -165,6 +165,53 @@ func All() []Patch {
 				return `initialPath:` + jsString(o.WorkspaceRoot) + `,fetchDirectoryContents:`
 			},
 		},
+		{
+			ID:      "workspace-file-uploader",
+			Desc:    "Inject client-side asynchronous streaming file uploader and progress UI",
+			Target:  HTML,
+			Kind:    InjectHead,
+			Replace: uploaderScript,
+		},
+		{
+			ID:      "composer-upload-menu-item",
+			Desc:    "Add Upload File menu item to the composer plus menu",
+			Target:  MainJS,
+			Kind:    Literal,
+			Find:    `{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),` + "\n" + `label:"Media",onClick:oa}`,
+			Replace: `{icon:ea=>x.createElement(T,{name:"attach_file",size:ea.width?Number(ea.width):14,className:ea.className}),label:"Upload File",onClick:()=>window.__agyTriggerUpload&&window.__agyTriggerUpload()},{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),label:"Media",onClick:oa}`,
+		},
+		{
+			ID:      "file-upload-accept-all",
+			Desc:    "Allow selecting any file type in the composer attachment dialog",
+			Target:  MainJS,
+			Kind:    Literal,
+			Find:    `accept:".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif,video/webm,.mp4,video/mp4,.pdf,application/pdf,.txt,text/plain,.csv,text/csv,.json,application/json,.md,text/markdown,.py,text/x-python,.js,.mjs,text/javascript,.ts,.tsx,text/x-typescript,.html,.htm,text/html,.css,text/css",multiple:!0`,
+			Replace: `accept:"*/*",multiple:!0`,
+		},
+		{
+			ID:      "file-upload-input-reset",
+			Desc:    "Ensure file input is reset after selection so selecting the same file triggers onChange",
+			Target:  MainJS,
+			Kind:    Literal,
+			Find:    `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{e=e.target;e.files&&a(e.files)},[a]);return{openFileDialog:(0,x.useCallback)(()=>{b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
+			Replace: `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{var t=e.target;if(t.files&&t.files.length>0)a(t.files);t.value=""},[a]);return{openFileDialog:(0,x.useCallback)(()=>{if(b.current)b.current.value="";b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
+		},
+		{
+			ID:      "file-upload-custom-text-types",
+			Desc:    "Allow non-standard text and data files like .har to be attached as text/plain or application/json",
+			Target:  MainJS,
+			Kind:    Literal,
+			Find:    `function WEa(a,b){b=b.split(";")[0].trim().toLowerCase();if(UEa.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return VEa[a]}`,
+			Replace: `function WEa(a,b){b=b.split(";")[0].trim().toLowerCase();if(UEa.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return VEa[a]||(b.startsWith("image/")||b.startsWith("video/")||b==="application/pdf"?void 0:a==="har"||a==="jsonl"?"application/json":"text/plain")}`,
+		},
+		{
+			ID:      "file-upload-large-file-streaming-fallback",
+			Desc:    "Stream large files exceeding 1MB to the workspace asynchronously with progress UI",
+			Target:  MainJS,
+			Kind:    Literal,
+			Find:    `if(n)if(k.size>1048576)console.error("Text file size exceeds 1MB limit");`,
+			Replace: `if(n)if(k.size>1048576){if(window.__agyUpload){window.__agyUpload([k]);return;}console.error("Text file size exceeds 1MB limit");}`,
+		},
 
 		{
 			ID:      "app-icons",
@@ -810,3 +857,184 @@ const signInBanner = `<style id="agy-signin-banner-style">
   }
 })();
 </script>`
+
+const uploaderScript = `<script>
+(function() {
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+  }
+
+  function getActiveConversationId() {
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('conversationId') || params.get('c');
+    if (id) return id;
+    var path = window.location.pathname;
+    if (path.startsWith('/c/')) {
+      return path.slice(3).split('/')[0];
+    }
+    return 'temp_' + Date.now().toString(36);
+  }
+
+  function getActiveProjectPath() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('project') || params.get('workspace') || '';
+  }
+
+  function insertPromptPath(path) {
+    var el = document.querySelector('[contenteditable="true"]');
+    if (el) {
+      el.focus();
+      var textToInsert = path + ' ';
+      try {
+        if (!document.execCommand('insertText', false, textToInsert)) {
+          el.innerText = (el.innerText ? el.innerText + ' ' : '') + textToInsert;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      } catch (e) {
+        el.innerText = (el.innerText ? el.innerText + ' ' : '') + textToInsert;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
+  window.__agyUpload = function(files) {
+    if (!files || files.length === 0) return;
+    var file = files[0];
+
+    var convoId = getActiveConversationId();
+    var projectPath = getActiveProjectPath();
+
+    var container = document.getElementById('agy-upload-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'agy-upload-container';
+      container.style.cssText = 'position:fixed;bottom:84px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:340px;width:calc(100vw - 32px);pointer-events:none;';
+      document.body.appendChild(container);
+    }
+
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,0.5);color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:12px;pointer-events:auto;transition:all 0.2s ease-out;';
+
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;';
+    
+    var nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:#e4e4e7;';
+    nameSpan.textContent = file.name;
+    
+    var pctSpan = document.createElement('span');
+    pctSpan.style.cssText = 'color:#a1a1aa;font-size:11px;font-variant-numeric:tabular-nums;flex-shrink:0;';
+    pctSpan.textContent = '0%';
+
+    header.appendChild(nameSpan);
+    header.appendChild(pctSpan);
+
+    var barBg = document.createElement('div');
+    barBg.style.cssText = 'width:100%;height:3px;background:#27272a;border-radius:99px;overflow:hidden;margin-bottom:6px;';
+    var bar = document.createElement('div');
+    bar.style.cssText = 'width:0%;height:100%;background:#3b82f6;border-radius:99px;transition:width 0.1s linear;';
+    barBg.appendChild(bar);
+
+    var footer = document.createElement('div');
+    footer.style.cssText = 'display:flex;justify-content:space-between;font-size:10px;color:#71717a;font-variant-numeric:tabular-nums;';
+    
+    var bytesSpan = document.createElement('span');
+    bytesSpan.textContent = '0 / ' + formatBytes(file.size);
+    
+    var speedSpan = document.createElement('span');
+    speedSpan.textContent = 'Starting...';
+
+    footer.appendChild(bytesSpan);
+    footer.appendChild(speedSpan);
+
+    card.appendChild(header);
+    card.appendChild(barBg);
+    card.appendChild(footer);
+    container.appendChild(card);
+
+    var formData = new FormData();
+    formData.append('conversationId', convoId);
+    formData.append('projectPath', projectPath);
+    formData.append('file', file);
+
+    var xhr = new XMLHttpRequest();
+    var startTime = Date.now();
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var pct = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = pct + '%';
+        pctSpan.textContent = pct + '%';
+        bytesSpan.textContent = formatBytes(e.loaded) + ' / ' + formatBytes(e.total);
+        var elapsed = (Date.now() - startTime) / 1000;
+        if (elapsed > 0.4) {
+          var speed = e.loaded / elapsed;
+          speedSpan.textContent = formatBytes(speed) + '/s';
+        }
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          var res = JSON.parse(xhr.responseText);
+          bar.style.background = '#22c55e';
+          pctSpan.textContent = 'Completed';
+          pctSpan.style.color = '#22c55e';
+          speedSpan.textContent = res.relativePath;
+          
+          insertPromptPath(res.relativePath);
+
+          setTimeout(function() {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(6px)';
+            setTimeout(function() { card.remove(); }, 200);
+          }, 2500);
+        } catch (err) {
+          showError('Invalid server response');
+        }
+      } else {
+        showError('Upload failed (' + xhr.status + ')');
+      }
+    };
+
+    xhr.onerror = function() {
+      showError('Network error');
+    };
+
+    function showError(msg) {
+      bar.style.background = '#ef4444';
+      pctSpan.textContent = 'Failed';
+      pctSpan.style.color = '#ef4444';
+      speedSpan.textContent = msg;
+      setTimeout(function() { card.remove(); }, 5000);
+    }
+
+    xhr.open('POST', '/__agy/api/upload');
+    xhr.send(formData);
+  };
+
+  var hiddenFileInput = null;
+  window.__agyTriggerUpload = function() {
+    if (!hiddenFileInput) {
+      hiddenFileInput = document.createElement('input');
+      hiddenFileInput.type = 'file';
+      hiddenFileInput.style.display = 'none';
+      document.body.appendChild(hiddenFileInput);
+      hiddenFileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files.length > 0) {
+          window.__agyUpload(e.target.files);
+        }
+        e.target.value = '';
+      });
+    }
+    hiddenFileInput.value = '';
+    hiddenFileInput.click();
+  };
+})();
+</script>`
+
