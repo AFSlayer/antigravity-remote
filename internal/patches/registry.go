@@ -5,14 +5,40 @@ import (
 	"regexp"
 )
 
-// The minifier wraps long lines, so the anchor must tolerate a newline between
-// the assignment and the byEffort lookup.
-var modelEffortRe = regexp.MustCompile(`,onClick:\(\)=>\{var y=[\r\n\s]*v\.byEffort\.get\(w\);y&&b\(y\)\}`)
+// Adaptive regular expressions matching across Antigravity 2.8.x, 2.9.x and future minified builds.
+var (
+	modelEffortRe = regexp.MustCompile(`,?onClick:(?:[a-zA-Z0-9_$]+\?void 0:)?\(\)=>\{var [a-zA-Z0-9_$]+=[\r\n\s]*[a-zA-Z0-9_$]+\.byEffort\.get\([a-zA-Z0-9_$]+\);[a-zA-Z0-9_$]+&&[a-zA-Z0-9_$]+\([a-zA-Z0-9_$]+\)\}`)
 
-// The Settings > Account button calls showLoginFlow, which the standalone build
-// wires to a stub that only writes to the console. The minifier may wrap the line
-// between the arrow and the call.
-var signInButtonRe = regexp.MustCompile(`onClick:\(\)=>[\r\n\s]*\w+\.showLoginFlow\(\)`)
+	signInButtonRe = regexp.MustCompile(`onClick:\(\)=>[\r\n\s]*(?:\{[\r\n\s]*(?:\w+\(\);[\r\n\s]*)?\w+\.showLoginFlow\(\)[\r\n\s]*\}|\w+\.showLoginFlow\(\))`)
+
+	skipOnboardingRe = regexp.MustCompile(`c\.hasOnboardingScreens&&[a-zA-Z0-9_$]+!==2&&[a-zA-Z0-9_$]+\(\{to:"/onboarding",replace:!0,throw:!0\}\)`)
+
+	mobileEnterNewlineRe = regexp.MustCompile(`registerCommand\(([a-zA-Z0-9_$]+),k=>\{if\(!k\)return!1;k\.preventDefault\(\);`)
+
+	hideMicButtonRe = regexp.MustCompile(`([a-zA-Z0-9_$]+\.displayName="GutterHoverCommentButton";var )([a-zA-Z0-9_$]+)=\(`)
+
+	hideUserProfileRe = regexp.MustCompile(`function [a-zA-Z0-9_$]+\(\{className:a=""\}={}\)\{return [a-zA-Z0-9_$]+\.createElement\("a",\{href:"#",onClick:b=>\{b\.preventDefault\(\)\},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground \\${a}`" + `,"aria-label":"User Profile \(Placeholder\)"`)
+
+	mobileSkipNotificationRe = regexp.MustCompile(`var ([a-zA-Z0-9_$]+)=!!this\.storageService\.get\("didAskForNotificationPermission"\);`)
+
+	mobileNewConvoViewRe = regexp.MustCompile(`(var|const)\s+([a-zA-Z0-9_$]+)=\(\)=>\{var a=([a-zA-Z0-9_$]+)\(\),b=([a-zA-Z0-9_$]+)\(\);return\(0,([a-zA-Z0-9_$]+)\.useCallback\)\(\(c,([a-zA-Z0-9_$]+)\)=>\{b\(([a-zA-Z0-9_$]+)\.map\(f=>\(\{trigger:f,ran:!1\}\)\)\);a\(c,\{section:[a-zA-Z0-9_$]+\}\)\},\[a,b\]\)\};[\r\n\s]*var ([a-zA-Z0-9_$]+)=\(\)=>\{var a=[a-zA-Z0-9_$]+\(\),\{q:b\}=([a-zA-Z0-9_$]+)\(\{strict:!1\}\);return ([a-zA-Z0-9_$]+)\.createElement\("div",\{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"\},([a-zA-Z0-9_$]+)\.createElement\("div",\{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{surface:"background"\}\)\),([a-zA-Z0-9_$]+)\.createElement\("div",\{className:"shrink-0 p-2"\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{cascadeId:void 0\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,[\r\n\s]*aboveContent:([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),null\),initialQuery:b\}\)\)\)\)\};`)
+
+	mobileNewConvoHeaderRe = regexp.MustCompile(`([a-zA-Z0-9_$]+)=\(\)=>([a-zA-Z0-9_$]+)\(\{select:a=>a\.location\.pathname==="\/"\}\)`)
+
+	mobileBackClearsSectionRe = regexp.MustCompile(`([a-zA-Z0-9_$]+\.createElement\([a-zA-Z0-9_$]+,\{iconName:"arrow_back",onClick:\(\)=>)([a-zA-Z0-9_$]+)\(\)(,"aria-label":"Back to home",dataTestId:"mobile-back-to-home"\}\))`)
+
+	folderPickerInitialPathRe = regexp.MustCompile(`initialPath:[a-zA-Z0-9_$]+\?[a-zA-Z0-9_$]+\.fsPath:[a-zA-Z0-9_$]+\?"C:/":"/",fetchDirectoryContents:`)
+
+	composerUploadMenuRe = regexp.MustCompile(`\{icon:([a-zA-Z0-9_$]+)=>([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{name:"image",size:[a-zA-Z0-9_$]+\.width\?Number\([a-zA-Z0-9_$]+\.width\):14,className:[a-zA-Z0-9_$]+\.className\}\),[\r\n\s]*label:"Media",onClick:([a-zA-Z0-9_$]+)\}`)
+
+	fileUploadAcceptAllRe = regexp.MustCompile(`accept:"\.png,[^"]+",multiple:!0`)
+
+	fileUploadInputResetRe = regexp.MustCompile(`var\s+([a-zA-Z0-9_$]+)=\(\{onFilesSelected:([a-zA-Z0-9_$]+)\}\)=>\{var\s+([a-zA-Z0-9_$]+)=\(0,([a-zA-Z0-9_$]+)\.useRef\)\(null\),([a-zA-Z0-9_$]+)=\(0,[a-zA-Z0-9_$]+\.useCallback\)\(([a-zA-Z0-9_$]+)=>\{[a-zA-Z0-9_$]+=[a-zA-Z0-9_$]+\.target;[a-zA-Z0-9_$]+\.files\&\&[a-zA-Z0-9_$]+\([a-zA-Z0-9_$]+\.files\)\},\[[a-zA-Z0-9_$]+\]\);return\{openFileDialog:\(0,[a-zA-Z0-9_$]+\.useCallback\)\(\(\)=>\{[a-zA-Z0-9_$]+\.current\?\.click\(\)\},\[\]\),fileInputRef:[a-zA-Z0-9_$]+,handleFileChange:[a-zA-Z0-9_$]+\}\};`)
+
+	fileUploadCustomTextTypesRe = regexp.MustCompile(`function ([a-zA-Z0-9_$]+)\(a,b\)\{b=b\.split\(";"\)\[0\]\.trim\(\)\.toLowerCase\(\);if\(([a-zA-Z0-9_$]+)\.includes\(b\)\)return b;a=a\.slice\(a\.lastIndexOf\("\."\)\+1\)\.toLowerCase\(\);return ([a-zA-Z0-9_$]+)\[a\]\}`)
+
+	fileUploadLargeFileStreamingRe = regexp.MustCompile(`if\(([a-zA-Z0-9_$]+)\)if\(([a-zA-Z0-9_$]+)\.size>1048576\)(?:console\.error\("Text file size exceeds 1MB limit"\);|[a-zA-Z0-9_$]+\?\.\("Text file size exceeds 1MB limit"\),[a-zA-Z0-9_$]+\("validation_check_failed",Error\("Text file size exceeds 1MB limit"\)\);)`)
+)
 
 func mobile(o Options) bool { return o.MobileUX }
 
@@ -36,9 +62,9 @@ func All() []Patch {
 			ID:       "skip-onboarding",
 			Desc:     "Skip the desktop onboarding redirect on remote clients",
 			Target:   MainJS,
-			Kind:     Literal,
+			Kind:     Regexp,
 			Required: true,
-			Find:     `c.hasOnboardingScreens&&e!==2&&RK({to:"/onboarding",replace:!0,throw:!0})`,
+			FindRe:   skipOnboardingRe,
 			Replace:  `void 0`,
 		},
 		// Returning false from the Lexical ENTER command handler lets the editor
@@ -48,10 +74,10 @@ func All() []Patch {
 			ID:      "mobile-enter-newline",
 			Desc:    "Enter inserts a newline on touch devices; Cmd/Ctrl+Enter sends",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `registerCommand(FE,k=>{if(!k)return!1;k.preventDefault();`,
-			Replace: `registerCommand(FE,k=>{if(!k)return!1;if(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&!k.metaKey&&!k.ctrlKey)return!1;k.preventDefault();`,
+			FindRe:  mobileEnterNewlineRe,
+			Replace: `registerCommand($1,k=>{if(!k)return!1;if(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&!k.metaKey&&!k.ctrlKey)return!1;k.preventDefault();`,
 		},
 		// On a desktop the effort submenu opens on hover, so the row's onClick is
 		// a convenience that picks the default effort. A tap fires both, closing
@@ -73,21 +99,22 @@ func All() []Patch {
 			ID:      "hide-mic-button",
 			Desc:    "Hide the voice-recording button (transcription is unavailable in standalone mode)",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `uz.displayName="GutterHoverCommentButton";var vz=(`,
-			Replace: `uz.displayName="GutterHoverCommentButton";var vz=function(){return null};var vzDisabled=(`,
+			FindRe:  hideMicButtonRe,
+			Replace: `${1}${2}=function(){return null};var ${2}Disabled=(`,
 		},
-		// The titlebar user profile icon is a dead placeholder in standalone mode.
+		// The titlebar user profile icon is a dead placeholder in standalone mode (2.8.x; removed upstream in 2.9.x).
 		// Replacing the component with a function returning null hides it cleanly.
 		{
-			ID:      "hide-user-profile-button",
-			Desc:    "Hide the non-functional user profile placeholder button on mobile",
-			Target:  MainJS,
-			Kind:    Literal,
-			Enabled: mobile,
-			Find:    `function wmb({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
-			Replace: `function wmb(){return null};function wmbDisabled({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+			ID:       "hide-user-profile-button",
+			Desc:     "Hide the non-functional user profile placeholder button on mobile",
+			Target:   MainJS,
+			Kind:     Regexp,
+			Enabled:  mobile,
+			Optional: true,
+			FindRe:   hideUserProfileRe,
+			Replace:  `function wmb(){return null};function wmbDisabled({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
 		},
 		// Google's standalone build cannot sign in from a browser: its auth service
 		// is a stub, and its OAuth client only accepts loopback redirect URIs. Point
@@ -110,10 +137,10 @@ func All() []Patch {
 			ID:      "mobile-skip-notification-prompt",
 			Desc:    "Skip the Enable Notifications banner on touch devices",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `var e=!!this.storageService.get("didAskForNotificationPermission");`,
-			Replace: `var e=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService.get("didAskForNotificationPermission");`,
+			FindRe:  mobileSkipNotificationRe,
+			Replace: `var $1=(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches)||!!this.storageService.get("didAskForNotificationPermission");`,
 		},
 
 		// When a project or standalone section is selected on touch devices (e.g. via + button),
@@ -123,10 +150,10 @@ func All() []Patch {
 			ID:      "mobile-new-convo-view",
 			Desc:    "Show the empty conversation composer view on touch devices when a project is selected",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `const tub=()=>{var a=yM(),b=IT();return(0,x.useCallback)((c,e)=>{b(HT.map(f=>({trigger:f,ran:!1})));a(c,{section:e})},[a,b])};` + "\n" + `var uub=()=>{var a=tub(),{q:b}=dM({strict:!1});return x.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},x.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},x.createElement(sub,{surface:"background"})),x.createElement("div",{className:"shrink-0 p-2"},x.createElement(e_,{cascadeId:void 0},x.createElement(b_,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,` + "\n" + `aboveContent:x.createElement(s_,null),initialQuery:b}))))};`,
-			Replace: `const tub=()=>{var a=yM(),b=IT();return(0,x.useCallback)((c,e)=>{b(HT.map(f=>({trigger:f,ran:!1})));a(c,{section:e,replace:!0})},[a,b])};var uub=()=>{var a=tub(),{q:b,section:sec}=dM({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return x.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?x.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},x.createElement(T,{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),x.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):x.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},x.createElement(sub,{surface:"background"})),x.createElement("div",{className:"shrink-0 p-2"},x.createElement(e_,{cascadeId:void 0},x.createElement(b_,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:x.createElement(s_,null),initialQuery:b}))))};`,
+			FindRe:  mobileNewConvoViewRe,
+			Replace: `var $2=()=>{var a=$3(),b=$4();return(0,$5.useCallback)((c,$6)=>{b($7.map(f=>({trigger:f,ran:!1})));a(c,{section:$6,replace:!0})},[a,b])};var $8=()=>{var a=$2(),{q:b,section:sec}=$9({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return $10.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?$10.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},$10.createElement(typeof T!=="undefined"?T:typeof U!=="undefined"?U:"span",{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),$10.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):$10.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},$10.createElement($13,{surface:"background"})),$10.createElement("div",{className:"shrink-0 p-2"},$10.createElement($15,{cascadeId:void 0},$10.createElement($17,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:$18.createElement($19,null),initialQuery:b}))))};`,
 		},
 
 		// On mobile, show the back button in the main titlebar when a project is selected
@@ -135,19 +162,19 @@ func All() []Patch {
 			ID:      "mobile-new-convo-header",
 			Desc:    "Show the back button in the titlebar when in new conversation mode and clear section on back",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `CM=()=>QL({select:a=>a.location.pathname==="/"})`,
-			Replace: `CM=()=>QL({select:a=>a.location.pathname==="/"&&!a.location.search?.section})`,
+			FindRe:  mobileNewConvoHeaderRe,
+			Replace: `$1=()=>$2({select:a=>a.location.pathname==="/"&&!a.location.search?.section})`,
 		},
 		{
 			ID:      "mobile-back-clears-section",
 			Desc:    "Ensure the mobile back button always clears the selected section to return to the root conversation list",
 			Target:  MainJS,
-			Kind:    Literal,
+			Kind:    Regexp,
 			Enabled: mobile,
-			Find:    `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c(),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
-			Replace: `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c({clearSection:!0}),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
+			FindRe:  mobileBackClearsSectionRe,
+			Replace: `${1}${2}({clearSection:!0})${3}`,
 		},
 
 		// Always start the folder picker at the configured workspace root instead of
@@ -156,11 +183,11 @@ func All() []Patch {
 			ID:     "folder-picker-initial-path",
 			Desc:   "Start the folder picker at the configured workspace root",
 			Target: MainJS,
-			Kind:   Literal,
+			Kind:   Regexp,
 			Enabled: func(o Options) bool {
 				return o.WorkspaceRoot != ""
 			},
-			Find: `initialPath:b?b.fsPath:Sf?"C:/":"/",fetchDirectoryContents:`,
+			FindRe: folderPickerInitialPathRe,
 			ReplaceFn: func(o Options) string {
 				return `initialPath:` + jsString(o.WorkspaceRoot) + `,fetchDirectoryContents:`
 			},
@@ -176,41 +203,41 @@ func All() []Patch {
 			ID:      "composer-upload-menu-item",
 			Desc:    "Add Upload File menu item to the composer plus menu",
 			Target:  MainJS,
-			Kind:    Literal,
-			Find:    `{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),` + "\n" + `label:"Media",onClick:oa}`,
-			Replace: `{icon:ea=>x.createElement(T,{name:"attach_file",size:ea.width?Number(ea.width):14,className:ea.className}),label:"Upload File",onClick:()=>window.__agyTriggerUpload&&window.__agyTriggerUpload()},{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),label:"Media",onClick:oa}`,
+			Kind:    Regexp,
+			FindRe:  composerUploadMenuRe,
+			Replace: `{icon:$1=>$2.createElement($3,{name:"attach_file",size:$1.width?Number($1.width):14,className:$1.className}),label:"Upload File",onClick:()=>window.__agyTriggerUpload&&window.__agyTriggerUpload()},{icon:$1=>$2.createElement($3,{name:"image",size:$1.width?Number($1.width):14,className:$1.className}),label:"Media",onClick:$4}`,
 		},
 		{
 			ID:      "file-upload-accept-all",
 			Desc:    "Allow selecting any file type in the composer attachment dialog",
 			Target:  MainJS,
-			Kind:    Literal,
-			Find:    `accept:".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif,video/webm,.mp4,video/mp4,.pdf,application/pdf,.txt,text/plain,.csv,text/csv,.json,application/json,.md,text/markdown,.py,text/x-python,.js,.mjs,text/javascript,.ts,.tsx,text/x-typescript,.html,.htm,text/html,.css,text/css",multiple:!0`,
+			Kind:    Regexp,
+			FindRe:  fileUploadAcceptAllRe,
 			Replace: `accept:"*/*",multiple:!0`,
 		},
 		{
 			ID:      "file-upload-input-reset",
 			Desc:    "Ensure file input is reset after selection so selecting the same file triggers onChange",
 			Target:  MainJS,
-			Kind:    Literal,
-			Find:    `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{e=e.target;e.files&&a(e.files)},[a]);return{openFileDialog:(0,x.useCallback)(()=>{b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
-			Replace: `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{var t=e.target;if(t.files&&t.files.length>0)a(t.files);t.value=""},[a]);return{openFileDialog:(0,x.useCallback)(()=>{if(b.current)b.current.value="";b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
+			Kind:    Regexp,
+			FindRe:  fileUploadInputResetRe,
+			Replace: `var $1=({onFilesSelected:$2})=>{var $3=(0,$4.useRef)(null),$5=(0,$4.useCallback)($6=>{var t=$6.target;if(t.files&&t.files.length>0)$2(t.files);t.value=""},[$2]);return{openFileDialog:(0,$4.useCallback)(()=>{if($3.current)$3.current.value="";$3.current?.click()},[]),fileInputRef:$3,handleFileChange:$5}};`,
 		},
 		{
 			ID:      "file-upload-custom-text-types",
 			Desc:    "Allow non-standard text and data files like .har to be attached as text/plain or application/json",
 			Target:  MainJS,
-			Kind:    Literal,
-			Find:    `function WEa(a,b){b=b.split(";")[0].trim().toLowerCase();if(UEa.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return VEa[a]}`,
-			Replace: `function WEa(a,b){b=b.split(";")[0].trim().toLowerCase();if(UEa.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return VEa[a]||(b.startsWith("image/")||b.startsWith("video/")||b==="application/pdf"?void 0:a==="har"||a==="jsonl"?"application/json":"text/plain")}`,
+			Kind:    Regexp,
+			FindRe:  fileUploadCustomTextTypesRe,
+			Replace: `function $1(a,b){b=b.split(";")[0].trim().toLowerCase();if($2.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return $3[a]||(b.startsWith("image/")||b.startsWith("video/")||b==="application/pdf"?void 0:a==="har"||a==="jsonl"?"application/json":"text/plain")}`,
 		},
 		{
 			ID:      "file-upload-large-file-streaming-fallback",
 			Desc:    "Stream large files exceeding 1MB to the workspace asynchronously with progress UI",
 			Target:  MainJS,
-			Kind:    Literal,
-			Find:    `if(n)if(k.size>1048576)console.error("Text file size exceeds 1MB limit");`,
-			Replace: `if(n)if(k.size>1048576){if(window.__agyUpload){window.__agyUpload([k]);return;}console.error("Text file size exceeds 1MB limit");}`,
+			Kind:    Regexp,
+			FindRe:  fileUploadLargeFileStreamingRe,
+			Replace: `if($1)if($2.size>1048576){if(window.__agyUpload){window.__agyUpload([$2]);return;}console.error("Text file size exceeds 1MB limit");}`,
 		},
 
 		{

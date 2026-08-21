@@ -123,10 +123,11 @@ agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.
 ## 命令
 
 ```
-agy-remote                     把桌面版共享到你的网络
-agy-remote serve               在服务器上无界面运行
-agy-remote doctor              全面检查并指出问题
-agy-remote config [flags]      把选项写进 config.json
+agy-remote                     在局域网共享桌面版
+agy-remote serve               在服务器无头运行
+agy-remote update [flags]      将 Antigravity language_server 更新到官方最新版本
+agy-remote doctor              检查所有项，报错
+agy-remote config [flags]      写入 options 到 config.json
 agy-remote passwd [password]   设置密码
 agy-remote sessions [revoke]   查看或登出设备
 ```

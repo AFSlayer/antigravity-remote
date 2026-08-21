@@ -141,6 +141,7 @@ agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.
 ```
 agy-remote                     데스크톱 앱을 내 네트워크에 공유
 agy-remote serve               서버에서 헤드리스로 실행
+agy-remote update [flags]      Antigravity language_server 최신 공식 빌드로 업데이트
 agy-remote doctor              전체 점검하고 문제점 출력
 agy-remote config [flags]      옵션을 config.json에 저장
 agy-remote passwd [password]   비밀번호 설정
@@ -170,8 +171,7 @@ agy-remote sessions [revoke]   기기 목록 / 전체 로그아웃
 `language_server --standalone`을 띄울 수 있는 게 그것뿐이다. CLI에도 번들은 들어 있는데
 서브하는 플래그가 없다.
 
-**업데이트되면 계속 되나?** 프록시는 된다. 개별 패치는 깨질 수 있다. 원격 접속에 꼭
-필요한 건 `base-url-origin` 하나다. 깨지면 이슈를 남겨주면 된다.
+**업데이트되면 계속 되나?** 그렇다. 패치 시스템은 웹팩 난독화 심볼이나 변수명 변경에 자동으로 적응하는 적응형 정규식 엔진을 사용하므로 판올림(2.8.x, 2.9.x+) 후에도 안정적으로 유지된다. 또한 헤드리스 서버(`serve` 모드)에서는 공식 최신 `language_server` 릴리즈를 하루 한 번 안전하고 원자적(Atomic)으로 자동 업데이트한다.
 
 **내 코드가 밖으로 나가나?** 안 나간다. 프록시도 language server도 내 컴퓨터에서 돈다.
 

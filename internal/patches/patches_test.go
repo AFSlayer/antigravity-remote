@@ -37,8 +37,22 @@ func syntheticBundle() []byte {
 // regexpFixtures supplies a synthetic match for each regexp patch, since a
 // regexp has no literal to reuse.
 var regexpFixtures = map[string]string{
-	"model-effort-submenu": ",onClick:()=>{var y=\nv.byEffort.get(w);y&&b(y)}",
-	"sign-in-button":       `rightElement:x.createElement(tz,{variant:"primary",onClick:()=>` + "\n" + `b.showLoginFlow()},"Sign In")`,
+	"skip-onboarding":                           `c.hasOnboardingScreens&&e!==2&&RK({to:"/onboarding",replace:!0,throw:!0})`,
+	"mobile-enter-newline":                      `registerCommand(FE,k=>{if(!k)return!1;k.preventDefault();`,
+	"model-effort-submenu":                      ",onClick:()=>{var y=\nv.byEffort.get(w);y&&b(y)}",
+	"hide-mic-button":                           `uz.displayName="GutterHoverCommentButton";var vz=(`,
+	"hide-user-profile-button":                  `function wmb({className:a=""}={}){return x.createElement("a",{href:"#",onClick:b=>{b.preventDefault()},className:` + "`w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-transparent text-muted-foreground ${a}`" + `,"aria-label":"User Profile (Placeholder)"`,
+	"sign-in-button":                            `rightElement:x.createElement(tz,{variant:"primary",onClick:()=>` + "\n" + `b.showLoginFlow()},"Sign In")`,
+	"mobile-skip-notification-prompt":           `var e=!!this.storageService.get("didAskForNotificationPermission");`,
+	"mobile-new-convo-view":                     `const tub=()=>{var a=yM(),b=IT();return(0,x.useCallback)((c,e)=>{b(HT.map(f=>({trigger:f,ran:!1})));a(c,{section:e})},[a,b])};` + "\n" + `var uub=()=>{var a=tub(),{q:b}=dM({strict:!1});return x.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},x.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},x.createElement(sub,{surface:"background"})),x.createElement("div",{className:"shrink-0 p-2"},x.createElement(e_,{cascadeId:void 0},x.createElement(b_,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,` + "\n" + `aboveContent:x.createElement(s_,null),initialQuery:b}))))};`,
+	"mobile-new-convo-header":                   `CM=()=>QL({select:a=>a.location.pathname==="/"})`,
+	"mobile-back-clears-section":                `x.createElement(gZ,{iconName:"arrow_back",onClick:()=>c(),"aria-label":"Back to home",dataTestId:"mobile-back-to-home"})`,
+	"folder-picker-initial-path":                `initialPath:b?b.fsPath:Sf?"C:/":"/",fetchDirectoryContents:`,
+	"composer-upload-menu-item":                 `{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),` + "\n" + `label:"Media",onClick:oa}`,
+	"file-upload-accept-all":                    `accept:".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif,video/webm,.mp4,video/mp4,.pdf,application/pdf,.txt,text/plain,.csv,text/csv,.json,application/json,.md,text/markdown,.py,text/x-python,.js,.mjs,text/javascript,.ts,.tsx,text/x-typescript,.html,.htm,text/html,.css,text/css",multiple:!0`,
+	"file-upload-input-reset":                   `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{e=e.target;e.files&&a(e.files)},[a]);return{openFileDialog:(0,x.useCallback)(()=>{b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
+	"file-upload-custom-text-types":             `function WEa(a,b){b=b.split(";")[0].trim().toLowerCase();if(UEa.includes(b))return b;a=a.slice(a.lastIndexOf(".")+1).toLowerCase();return VEa[a]}`,
+	"file-upload-large-file-streaming-fallback": `if(n)if(k.size>1048576)console.error("Text file size exceeds 1MB limit");`,
 }
 
 func fullOptions() Options {

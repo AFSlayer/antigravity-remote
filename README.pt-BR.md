@@ -143,6 +143,7 @@ O resto está em [SECURITY.md](SECURITY.md). Use Tailscale se puder, HTTPS se n�
 ```
 agy-remote                     compartilha o app desktop na sua rede
 agy-remote serve               roda headless num servidor
+agy-remote update [flags]      atualiza o Antigravity language_server para a versão oficial mais recente
 agy-remote doctor              verifica tudo e diz o que está errado
 agy-remote config [flags]      grava opções no config.json
 agy-remote passwd [password]   define a senha

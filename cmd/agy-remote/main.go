@@ -20,6 +20,7 @@ Usage:
   agy-remote config [flags]     Save options to config.json without starting
   agy-remote passwd [password]  Set the access password
   agy-remote sessions [revoke]  List or revoke signed-in devices
+  agy-remote update [flags]     Update Antigravity language_server to the latest official release
   agy-remote version            Print the version
 
 Flags:
@@ -62,6 +63,8 @@ func main() {
 		mustRun(passwd(args))
 	case "sessions":
 		mustRun(sessionsCommand(args))
+	case "update":
+		mustRun(updateCommand(args))
 	case "version", "--version", "-v":
 		fmt.Println(version)
 	case "help", "--help", "-h":

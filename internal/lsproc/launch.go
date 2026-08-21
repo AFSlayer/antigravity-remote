@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultIDEVersion        = "2.8.1"
+	DefaultIDEVersion        = "2.9.1"
 	DefaultAPIServerURL      = "https://generativelanguage.googleapis.com"
 	DefaultCloudCodeEndpoint = "https://daily-cloudcode-pa.googleapis.com"
 )
@@ -40,6 +40,12 @@ const BrowserShimName = "xdg-open"
 func WriteBrowserShim(dir, urlFile string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
+	}
+
+	if runtime.GOOS == "windows" {
+		cmdScript := fmt.Sprintf("@echo off\r\necho %%~1 >> %s\r\n", urlFile)
+		_ = os.WriteFile(filepath.Join(dir, "xdg-open.cmd"), []byte(cmdScript), 0o700)
+		_ = os.WriteFile(filepath.Join(dir, "open.cmd"), []byte(cmdScript), 0o700)
 	}
 
 	script := "#!/bin/sh\nprintf '%s\\n' \"$1\" >> " + shellQuote(urlFile) + "\n"

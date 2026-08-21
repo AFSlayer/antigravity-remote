@@ -80,6 +80,8 @@ type Patch struct {
 
 	// Required marks patches without which remote access cannot work at all.
 	Required bool
+	// Optional marks patches that may not match on newer upstream builds where Google already fixed/removed the element.
+	Optional bool
 	// Enabled gates the patch on configuration; nil means always enabled.
 	Enabled func(Options) bool
 }
@@ -111,6 +113,8 @@ const (
 	StatusMissing
 	// StatusDisabled means configuration turned the patch off.
 	StatusDisabled
+	// StatusNotNeeded means the anchor was absent because upstream already addressed it.
+	StatusNotNeeded
 )
 
 func (s Status) String() string {
@@ -119,6 +123,8 @@ func (s Status) String() string {
 		return "applied"
 	case StatusDisabled:
 		return "disabled"
+	case StatusNotNeeded:
+		return "not needed"
 	default:
 		return "not found"
 	}
@@ -187,21 +193,24 @@ func Apply(target Target, body []byte, opts Options) ([]byte, Report) {
 			if bytes.Contains(body, []byte(p.Find)) {
 				body = bytes.Replace(body, []byte(p.Find), []byte(p.replacement(opts)), 1)
 				res.Status = StatusApplied
+			} else if p.Optional {
+				res.Status = StatusNotNeeded
 			} else {
 				res.Status = StatusMissing
 			}
 
 		case Regexp:
-			if p.FindRe.Match(body) {
-				done := false
-				body = p.FindRe.ReplaceAllFunc(body, func(m []byte) []byte {
-					if done {
-						return m
-					}
-					done = true
-					return []byte(p.replacement(opts))
-				})
+			loc := p.FindRe.FindSubmatchIndex(body)
+			if loc != nil {
+				repl := p.FindRe.Expand(nil, []byte(p.replacement(opts)), body, loc)
+				var out []byte
+				out = append(out, body[:loc[0]]...)
+				out = append(out, repl...)
+				out = append(out, body[loc[1]:]...)
+				body = out
 				res.Status = StatusApplied
+			} else if p.Optional {
+				res.Status = StatusNotNeeded
 			} else {
 				res.Status = StatusMissing
 			}

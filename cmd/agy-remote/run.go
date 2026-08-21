@@ -24,6 +24,7 @@ import (
 	"github.com/AFSlayer/antigravity-remote/internal/proxy"
 	"github.com/AFSlayer/antigravity-remote/internal/signin"
 	"github.com/AFSlayer/antigravity-remote/internal/ui"
+	"github.com/AFSlayer/antigravity-remote/internal/updater"
 	"github.com/AFSlayer/antigravity-remote/internal/upload"
 )
 
@@ -157,6 +158,10 @@ func (r *runner) start() error {
 	})
 	uploader.Register(publicMux)
 	uploader.StartCleaner(uploaderCtx, time.Hour)
+
+	if r.mode == modeServe {
+		updater.StartAutoUpdater(uploaderCtx, r.cfg, nil)
+	}
 
 	ui.NewSignIn(signin.New(instance, r.shimURLFile)).Register(publicMux)
 	if r.cfg.Debug {

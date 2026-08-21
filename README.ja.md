@@ -136,8 +136,9 @@ agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.
 ## コマンド
 
 ```
-agy-remote                     デスクトップ版を手元のネットワークに共有
+agy-remote                     デスクトップ版をローカルネットワークに共有
 agy-remote serve               サーバーでヘッドレス実行
+agy-remote update [flags]      Antigravity language_server を最新の公式リリースに更新
 agy-remote doctor              全体を点検して問題を出力
 agy-remote config [flags]      オプションを config.json に保存
 agy-remote passwd [password]   パスワードを設定

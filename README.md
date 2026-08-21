@@ -152,6 +152,7 @@ can't.
 ```
 agy-remote                     share the desktop app on your network
 agy-remote serve               run headless on a server
+agy-remote update [flags]      check and update Antigravity language_server to the latest official release
 agy-remote doctor              check everything, say what's wrong
 agy-remote config [flags]      write options to config.json
 agy-remote passwd [password]   set the password
@@ -181,9 +182,10 @@ Prompts and code go to the language server on the same host and nowhere else.
 just "Antigravity", because only that runs `language_server --standalone`. The CLI
 has the bundle compiled in but no flag to serve it.
 
-**Will it survive updates?** The proxy will, individual patches might not.
-`base-url-origin` is the only one remote access needs. File an issue when something
-breaks.
+**Will it survive updates?** Yes. Patches use an adaptive regular expression engine
+that automatically accommodates webpack symbol and minifier identifier changes across
+releases (e.g. 2.8.x, 2.9.x+). On headless servers (`serve` mode), `agy-remote` checks
+for and applies official upstream `language_server` updates safely and atomically once a day.
 
 **Does my code leave the machine?** No. Proxy and language server both run locally.
 
