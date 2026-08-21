@@ -4,7 +4,7 @@
 
 **Antigravity デスクトップ版をスマホから使う。**
 
-[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-remote?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-remote/releases/latest)
+[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 <img src="docs/assets/demo.gif" width="300" alt="スマホからエージェントにサーバーの状態を聞いている様子" />
@@ -34,12 +34,12 @@ browser agent も動くし、Google が新機能を出せば勝手に付いて�
 
 ```bash
 # macOS、Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
 入れたらそのまま起動する。コントロールパネルが開いて QR コードが出るので、スマホで読み
@@ -66,7 +66,7 @@ Linux マシンに置けば、ノートを閉じても Antigravity は動き続�
 ARM インスタンスで足りる。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
 ドメインとワークスペースのフォルダを聞いて、Google の `storage.googleapis.com` から公式

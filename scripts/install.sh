@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="AFSlayer/antigravity-remote"
+REPO="AFSlayer/antigravity-server"
 DOWNLOAD_PAGE="https://antigravity.google/download"
 
 PREFIX="${AGY_INSTALL_PREFIX:-/usr/local/bin}"

@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/AFSlayer/antigravity-remote/internal/config"
-	"github.com/AFSlayer/antigravity-remote/internal/lsproc"
+	"github.com/AFSlayer/antigravity-server/internal/config"
+	"github.com/AFSlayer/antigravity-server/internal/lsproc"
 )
 
 // StartAutoUpdater runs a background loop in serve mode that checks once a day for official Antigravity updates.

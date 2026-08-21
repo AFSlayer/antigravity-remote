@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AFSlayer/antigravity-remote/internal/patches"
+	"github.com/AFSlayer/antigravity-server/internal/patches"
 )
 
 // ReportFunc receives the patch outcome the first time each document is served.

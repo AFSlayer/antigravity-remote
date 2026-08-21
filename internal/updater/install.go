@@ -46,7 +46,7 @@ func DownloadAndInstall(ctx context.Context, url, targetPath string, progress Pr
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}
-	req.Header.Set("User-Agent", "antigravity-remote-updater")
+	req.Header.Set("User-Agent", "antigravity-server-updater")
 
 	resp, err := client.Do(req)
 	if err != nil {

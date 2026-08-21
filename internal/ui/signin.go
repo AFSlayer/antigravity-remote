@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AFSlayer/antigravity-remote/internal/signin"
+	"github.com/AFSlayer/antigravity-server/internal/signin"
 )
 
 // Sign-in routes. They sit under /__agy/ so the authenticator gates them like any

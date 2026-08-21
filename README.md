@@ -1,11 +1,12 @@
 <div align="center">
 
-# Antigravity Remote
+# Antigravity Server
 
-**Use the Antigravity desktop app from your phone.**
+**Self-hosted cloud & mobile server for Google Antigravity.**  
+*Run your personal AI coding IDE on your server or desktop, access it from any phone or browser with zero lag.*
 
-[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-remote?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-remote/releases/latest)
-[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-remote/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-remote/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-server/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-server/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 <img src="docs/assets/demo.gif" width="300" alt="Asking an agent for the server state from a phone" />
@@ -14,13 +15,26 @@
 
 </div>
 
+## Why Antigravity Server? (vs Official Remote)
+
+Google now offers an official remote bridge (`antigravity.google.com/r/...`), but **`antigravity-server`** provides a fundamentally different, faster, and more powerful architecture tailored for self-hosters and mobile power users:
+
+| Feature | Official Google Remote | Antigravity Server (`agy-server`) |
+| :--- | :--- | :--- |
+| **Connection & Latency** | **Cloud Relay Bridge** (routed through Google servers, noticeable lag & disconnects) | **Direct Connection / Reverse Proxy** (Direct LAN/P2P/VPS connection, ultra-low latency) |
+| **24/7 Headless VPS** | ❌ Requires running desktop GUI app and scanning QR code periodically | ✅ **Native Headless Linux VPS / Cloud VM** support with systemd service & auto-updater |
+| **Mobile Project (+) Action** | ❌ Omitted on mobile; forced to switch projects via bottom input | ✅ **Restored (+) New Conversation** button directly beside project headers |
+| **iOS / PWA Safe Area** | ⚠️ Giant bottom safe-area gaps; navigation bar disappears on keyboard open | ✅ **Pixel-Perfect PWA Layout**: 1x Safe Area insets and dynamic 0px keyboard snug fit |
+| **Large File Streaming** | ❌ 1MB limit; cannot upload datasets or raw archives | ✅ **Chunked Streaming Uploader**: upload 100MB+ logs, HARs, and assets directly to workspace |
+| **Privacy & Access Control** | Bound to Google Account login & Google cloud relay | Self-hosted domain, PBKDF2 password protection, rate-limiting, and VPN compatibility |
+
 ## What it is
 
 The Antigravity desktop app ships a binary called `language_server`. It's what
 talks to Google, and with `--standalone` it also serves the whole Antigravity UI as
 a web app. It only listens on `127.0.0.1`.
 
-`agy-remote` puts a password in front of it and forwards it to your network. It
+`agy-server` (or `agy-remote`) puts a password in front of it and forwards it to your network. It
 also rewrites a few strings in the JS bundle on the way through, since a desktop
 IDE in a phone browser has some rough edges.
 
@@ -36,12 +50,12 @@ matching.
 
 ```bash
 # macOS, Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
 It installs and starts. A control panel opens with a QR code. Scan it and you're
@@ -69,7 +83,7 @@ On a Linux box, Antigravity keeps working with your laptop closed. A cheap VPS o
 free-tier ARM instance is enough.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
 It asks for a domain and a workspace folder, pulls the official Antigravity build

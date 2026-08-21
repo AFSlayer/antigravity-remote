@@ -11,17 +11,17 @@ import (
 
 var version = "dev"
 
-const usage = `Antigravity Remote — use your real Antigravity from your phone.
+const usage = `Antigravity Server — self-hosted cloud & mobile server for Google Antigravity.
 
 Usage:
-  agy-remote [flags]            Share the Antigravity desktop app on your network
-  agy-remote serve [flags]      Run headless on a server (personal cloud Antigravity)
-  agy-remote doctor             Check the setup and report what is wrong
-  agy-remote config [flags]     Save options to config.json without starting
-  agy-remote passwd [password]  Set the access password
-  agy-remote sessions [revoke]  List or revoke signed-in devices
-  agy-remote update [flags]     Update Antigravity language_server to the latest official release
-  agy-remote version            Print the version
+  agy-server [flags]            Share the Antigravity desktop app on your network
+  agy-server serve [flags]      Run headless on a server (personal cloud Antigravity)
+  agy-server doctor             Check the setup and report what is wrong
+  agy-server config [flags]     Save options to config.json without starting
+  agy-server passwd [password]  Set the access password
+  agy-server sessions [revoke]  List or revoke signed-in devices
+  agy-server update [flags]     Update Antigravity language_server to the latest official release
+  agy-server version            Print the version
 
 Flags:
   --port N                  Port to listen on (default 8765)

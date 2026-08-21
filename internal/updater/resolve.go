@@ -80,7 +80,7 @@ func ResolveLatest(pageURL string, goos, goarch string) (*UpdateInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build request: %w", err)
 	}
-	req.Header.Set("User-Agent", "antigravity-remote-updater")
+	req.Header.Set("User-Agent", "antigravity-server-updater")
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	resp, err := client.Do(req)
