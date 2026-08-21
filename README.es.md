@@ -92,25 +92,27 @@ scp ~/.gemini/jetski-standalone-oauth-token tu@tu-servidor:~/.gemini/
 
 `agy-remote` muestra ese comando cuando falta el token.
 
-## Qué se parchea
-
-Diecinueve parches, descritos en
+## Qué parches se aplican
+ 
+Veinticinco parches, cada uno descrito en
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
-dice cuáles se aplicaron.
+indica cuáles se aplicaron.
 
 | Problema | Parche |
 | --- | --- |
-| El bundle llama a `https://127.0.0.1:<port>`, que en el móvil es el móvil | Usar la origin del navegador |
-| Enter envía a media frase | En táctil, Enter es salto de línea y Cmd/Ctrl+Enter envía |
-| Tocar un modelo elige medium y cierra el menú | Tocar abre el submenú de esfuerzo |
-| Banner "Enable Notifications" en la primera respuesta | No mostrarlo en pantallas táctiles |
-| Un botón de micrófono que no funciona, porque standalone no transcribe | Ocultarlo |
-| Icono de perfil de usuario sin función en el encabezado móvil | Ocultarlo |
-| Tocar `+` en móvil se queda en la lista de conversaciones | Abrir la vista de nueva conversación e integrar navegación atrás |
-| Los proyectos nuevos empiezan en `/` | Empezar en la carpeta de trabajo configurada |
-| Sin icono, retardo de 300 ms | El icono de Antigravity, respuesta inmediata |
-| Barra inferior de iOS y teclado virtual solapando la vista | Insets de Safe Area y sincronización de altura de teclado |
-| No se puede iniciar sesión con Google desde navegador remoto | Conectar el botón de inicio de sesión al flujo web |
+| El paquete llama a `https://127.0.0.1:<puerto>`, que desde un teléfono es el teléfono | Usar el origen del navegador |
+| Enter envía a mitad de frase | En táctil, Enter es salto de línea y Cmd/Ctrl+Enter envía |
+| Tocar un modelo selecciona medium y cierra el menú | El toque abre el submenú de esfuerzo |
+| Banner "Enable Notifications" en la primera respuesta | Omitirlo en dispositivos táctiles |
+| Un botón de micrófono que no puede funcionar, ya que standalone no tiene transcripción | Ocultarlo |
+| Icono de perfil de usuario sin función en la barra superior móvil | Ocultarlo |
+| Tocar `+` en móvil no abre un compositor dedicado | Abrir vista de nueva conversación directamente e integrar botón volver en la barra superior móvil |
+| Nuevos proyectos empiezan en `/` | Empezar en la carpeta de espacio de trabajo configurada |
+| Archivos grandes (.har, logs) congelan el navegador o fallan por límite de 20MB | Transmisión asíncrona directa al espacio de trabajo con interfaz de progreso nativa |
+| Archivos no estándar (.har, .jsonl) rechazados al adjuntar | Permitir todos los tipos de archivo y analizar datos de texto |
+| Sin icono, retraso de toque de 300 ms | El icono de Antigravity, toques instantáneos |
+| Solapamiento de la barra de inicio de iOS y teclado virtual que desborda la vista | Márgenes de área segura y sincronización de altura de vista |
+| La versión standalone no puede iniciar sesión desde un navegador remoto | Conectar el botón de inicio de sesión de Ajustes al flujo de autenticación web |
 
 Para dejar la interfaz intacta, `agy-remote --no-mobile-patches`.
 

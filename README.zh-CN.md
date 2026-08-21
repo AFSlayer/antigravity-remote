@@ -83,23 +83,23 @@ token 缺失时 `agy-remote` 会把这条命令打出来。
 
 ## 打了哪些补丁
 
-一共 14 个，说明都在
-[`internal/patches/registry.go`](internal/patches/registry.go)。用 `agy-remote doctor`
-看哪些生效了。
+25 个补丁，每个都在 [`internal/patches/registry.go`](internal/patches/registry.go) 中说明。使用 `agy-remote doctor` 查看应用情况。
 
 | 问题 | 补丁 |
 | --- | --- |
-| bundle 调用 `https://127.0.0.1:<port>`，在手机上那就是手机 | 改用浏览器的 origin |
-| 句子没写完按回车就发出去了 | 触屏上回车是换行，Cmd/Ctrl+回车才发送 |
-| 点模型就按 medium 选中并关菜单 | 点开推理强度子菜单 |
-| 第一次回复后弹出 “Enable Notifications” 横幅 | 触屏设备上跳过 |
-| standalone 没有语音转写，麦克风按钮却还在 | 隐藏 |
-| 移动端顶部栏无功能的头像占位图标 | 隐藏 |
-| 移动端点击 `+` 留在对话列表 | 直接进入全新的对话编写视图并整合返回导航 |
-| 新建项目从 `/` 开始 | 从配置的工作目录开始 |
-| 没图标、300ms 点击延迟 | Antigravity 图标、即时响应 |
-| iOS 底部横条遮挡及虚拟键盘顶出视口 | 适配 Safe Area 并同步虚拟键盘高度 |
-| 远程浏览器中无法完成 Google 登录 | 将设置界面的登录按钮重定向至 Web 认证页面 |
+| 前端包请求 `https://127.0.0.1:<port>`，在手机上就是手机自己 | 使用浏览器的 origin |
+| 输入文字时回车就发送了 | 触屏上回车换行，Cmd/Ctrl+回车发送 |
+| 点模型直接选了 medium 并关闭菜单 | 点击打开 effort（思考深度）子菜单 |
+| 第一次回复后弹出 "Enable Notifications" | 触屏设备上跳过 |
+| standalone 无法听写，但有麦克风按钮 | 隐藏 |
+| 移动端标题栏中失效的用户头像占位图标 | 隐藏 |
+| 移动端点击 `+` 停留在会话列表仅聚焦输入框 | 直接进入全新对话界面并集成返回按钮 |
+| 新项目从 `/` 目录开始 | 从你设置的工作区目录开始 |
+| 大文件（.har、日志等）导致浏览器卡死或 20MB 限制错误 | 直接异步流式上传到工作区并提供原生进度 UI |
+| 不支持的文件扩展名（.har、.jsonl 等）被拒绝 | 允许所有文件类型并解析文本/数据载荷 |
+| 没图标，300 毫秒点击延迟 | Antigravity 图标，即时响应 |
+| iOS 底部横条遮挡及虚拟键盘顶起视图问题 | Safe Area 边距适配与视口高度同步 |
+| 远程浏览器无法登录 Google 账号 | 将设置中的登录按钮重定向至 Web 认证流程 |
 
 想看原样界面用 `agy-remote --no-mobile-patches`。
 

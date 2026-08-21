@@ -92,25 +92,27 @@ scp ~/.gemini/jetski-standalone-oauth-token voce@seu-servidor:~/.gemini/
 
 O `agy-remote` mostra esse comando quando o token está faltando.
 
-## O que é modificado
-
-Dezenove patches, descritos em
-[`internal/patches/registry.go`](internal/patches/registry.go). O `agy-remote doctor`
-diz quais foram aplicados.
+## O que é corrigido
+ 
+Vinte e cinco patches, cada um descrito em
+[`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
+mostra quais foram aplicados.
 
 | Problema | Patch |
 | --- | --- |
-| O bundle chama `https://127.0.0.1:<port>`, que no celular é o próprio celular | Usar a origin do navegador |
-| Enter envia no meio da frase | No toque, Enter é nova linha e Cmd/Ctrl+Enter envia |
-| Tocar num modelo escolhe medium e fecha o menu | Tocar abre o submenu de esforço |
-| Banner "Enable Notifications" na primeira resposta | Não mostrar em telas de toque |
-| Botão de microfone que não funciona, já que standalone não transcreve | Esconder |
-| Ícone de perfil de usuário inoperante no cabeçalho móvel | Ocultar |
-| Tocar em `+` no celular fica na lista de conversas | Abrir a tela de nova conversa e integrar navegação de retorno |
-| Projetos novos começam em `/` | Começar na pasta de trabalho configurada |
-| Sem ícone, atraso de 300 ms | O ícone do Antigravity, toque imediato |
-| Barra inferior do iOS e teclado virtual empurrando a tela | Insets de Safe Area e sincronização de altura de teclado |
-| Não é possível fazer login com o Google pelo navegador remoto | Direcionar o botão de login para o fluxo web |
+| O bundle chama `https://127.0.0.1:<porta>`, que no celular é o próprio celular | Usar a origem do navegador |
+| Enter envia no meio da frase | No toque, Enter é quebra de linha e Cmd/Ctrl+Enter envia |
+| Tocar em um modelo seleciona medium e fecha o menu | Tocar abre o submenu de esforço |
+| Banner "Enable Notifications" na primeira resposta | Pular em dispositivos de toque |
+| Botão de microfone inútil, já que standalone não tem transcrição | Ocultar |
+| Ícone de perfil sem função no cabeçalho mobile | Ocultar |
+| Tocar em `+` no mobile não abre compositor dedicado | Abrir visualização de nova conversa diretamente e integrar botão voltar no cabeçalho |
+| Novos projetos começam em `/` | Começar na pasta de workspace configurada |
+| Arquivos grandes (.har, logs) congelam o navegador ou falham com limite de 20MB | Transmissão assíncrona direta para o espaço de trabalho com UI de progresso nativa |
+| Arquivos não padrão (.har, .jsonl) rejeitados no anexo | Permitir todos os tipos de arquivo e analisar dados de texto |
+| Sem ícone, atraso de 300 ms no toque | Ícone do Antigravity, resposta instantânea |
+| Barra inferior do iOS e teclado virtual cobrindo a tela | Margens de Safe Area e sincronização de altura de viewport |
+| Build standalone não consegue fazer login no Google via navegador remoto | Conectar o botão de login das configurações ao fluxo de autenticação web |
 
 Para a interface intacta, `agy-remote --no-mobile-patches`.
 

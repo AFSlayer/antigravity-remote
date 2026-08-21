@@ -94,7 +94,7 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 
 ## What gets patched
 
-Nineteen patches, each described in
+Twenty-five patches, each described in
 [`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
 says which applied.
 
@@ -108,6 +108,8 @@ says which applied.
 | Dead user profile placeholder icon in the mobile titlebar | Hide it |
 | Tapping `+` on mobile doesn't open a dedicated composer | Open new conversation view directly & integrate back button in mobile titlebar |
 | New projects start in `/` | Start in the workspace folder you set |
+| Large files (.har, logs) freeze browser or fail with 20MB RPC limit | Stream directly to workspace asynchronously with native progress UI |
+| Non-standard files (.har, .jsonl) rejected by attachment | Allow all file types and parse text/data payloads |
 | No icon, 300 ms tap delay | The Antigravity icon, instant taps |
 | iOS home bar overlap & virtual keyboard pushing view offscreen | Safe area insets & viewport height sync |
 | Standalone build cannot sign in from a remote browser | Connect Settings sign-in button to web auth flow |
