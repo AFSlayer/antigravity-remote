@@ -1037,4 +1037,3 @@ const uploaderScript = `<script>
   };
 })();
 </script>`
-
