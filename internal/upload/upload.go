@@ -225,28 +225,42 @@ func (u *Uploader) cleanupOldFiles() {
 
 	cutoff := time.Now().Add(-u.ttl)
 
-	// Walk workspace and clean files inside uploads/ directories
-	_ = filepath.Walk(wsRoot, func(path string, info os.FileInfo, err error) error {
+	// 1. Clean root uploads folder: <workspaceRoot>/uploads
+	rootUploads := filepath.Join(wsRoot, "uploads")
+	cleanUploadDir(rootUploads, cutoff)
+
+	// 2. Clean project-specific uploads folders: <workspaceRoot>/<project>/uploads
+	entries, err := os.ReadDir(wsRoot)
+	if err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
+				projUploads := filepath.Join(wsRoot, entry.Name(), "uploads")
+				if info, err := os.Stat(projUploads); err == nil && info.IsDir() {
+					cleanUploadDir(projUploads, cutoff)
+				}
+			}
+		}
+	}
+}
+
+func cleanUploadDir(dir string, cutoff time.Time) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return
+	}
+
+	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		if !info.IsDir() {
-			if strings.Contains(path, "/uploads/") || strings.Contains(path, "/.temporary_uploads/") {
-				if info.ModTime().Before(cutoff) {
-					if err := os.Remove(path); err == nil {
-						log.Printf("[upload cleaner] deleted expired file: %s", path)
-					}
-				}
+		if !info.IsDir() && info.ModTime().Before(cutoff) {
+			if err := os.Remove(path); err == nil {
+				log.Printf("[upload cleaner] deleted expired file: %s", path)
 			}
 		}
 		return nil
 	})
 
-	// Remove empty directories in uploads
-	uploadsRoot := filepath.Join(wsRoot, "uploads")
-	removeEmptyDirs(uploadsRoot)
-	tempRoot := filepath.Join(wsRoot, ".temporary_uploads")
-	removeEmptyDirs(tempRoot)
+	removeEmptyDirs(dir)
 }
 
 func removeEmptyDirs(dir string) {

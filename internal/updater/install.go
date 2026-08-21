@@ -3,6 +3,7 @@ package updater
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -18,9 +19,21 @@ import (
 type ProgressFn func(downloaded, total int64)
 
 // DownloadAndInstall downloads the official Antigravity artifact and installs language_server to targetPath.
-func DownloadAndInstall(url, targetPath string, progress ProgressFn) error {
+func DownloadAndInstall(ctx context.Context, url, targetPath string, progress ProgressFn) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if targetPath == "" {
 		return errors.New("targetPath cannot be empty")
+	}
+
+	// Defense-in-depth: validate download URL domain
+	if err := ValidateDownloadURL(url); err != nil {
+		return err
+	}
+
+	if strings.HasSuffix(url, ".dmg") {
+		return errors.New("macOS uses DMG desktop bundle; please update via the Antigravity desktop app or use Linux for headless serve mode")
 	}
 
 	targetDir := filepath.Dir(targetPath)
@@ -29,7 +42,7 @@ func DownloadAndInstall(url, targetPath string, progress ProgressFn) error {
 	}
 
 	client := &http.Client{Timeout: 30 * time.Minute}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}
@@ -51,7 +64,7 @@ func DownloadAndInstall(url, targetPath string, progress ProgressFn) error {
 		src = &progressReader{reader: resp.Body, total: total, progress: progress}
 	}
 
-	// Create temporary file for atomic installation
+	// Create temporary file in the same directory to guarantee same-filesystem atomic rename
 	tmpFile, err := os.CreateTemp(targetDir, "language_server.*.tmp")
 	if err != nil {
 		return fmt.Errorf("create temp file in %s: %w", targetDir, err)
@@ -66,7 +79,7 @@ func DownloadAndInstall(url, targetPath string, progress ProgressFn) error {
 			return err
 		}
 	} else {
-		// Direct stream (e.g. standalone executable or binary)
+		// Direct executable stream
 		if _, err := io.Copy(tmpFile, src); err != nil {
 			tmpFile.Close()
 			return fmt.Errorf("write binary: %w", err)
@@ -81,7 +94,7 @@ func DownloadAndInstall(url, targetPath string, progress ProgressFn) error {
 		return fmt.Errorf("close temp file: %w", err)
 	}
 
-	// Atomic replace
+	// Guaranteed atomic replace
 	return atomicReplace(tmpPath, targetPath)
 }
 
@@ -102,7 +115,6 @@ func extractLanguageServerFromTarGz(r io.Reader, dst io.Writer) error {
 			return fmt.Errorf("read tar entry: %w", err)
 		}
 
-		// Look for resources/bin/language_server or language_server binary
 		clean := filepath.ToSlash(hdr.Name)
 		if strings.HasSuffix(clean, "/resources/bin/language_server") || clean == "language_server" || strings.HasSuffix(clean, "/language_server") {
 			if hdr.Typeflag == tar.TypeReg || hdr.Typeflag == tar.TypeRegA {
@@ -126,27 +138,7 @@ func atomicReplace(src, dst string) error {
 	}
 
 	if err := os.Rename(src, dst); err != nil {
-		// Fallback: copy file content
-		return copyFile(src, dst)
-	}
-	return nil
-}
-
-func copyFile(src, dst string) error {
-	s, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer s.Close()
-
-	d, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-
-	if _, err := io.Copy(d, s); err != nil {
-		return err
+		return fmt.Errorf("atomic rename failed (original binary preserved): %w", err)
 	}
 	return nil
 }

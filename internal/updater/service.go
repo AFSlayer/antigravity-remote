@@ -21,13 +21,16 @@ func StartAutoUpdater(ctx context.Context, cfg *config.Config, reloadLS func()) 
 
 	go func() {
 		// Wait 5 minutes after startup before the first check so initial traffic is undisturbed.
+		initTimer := time.NewTimer(5 * time.Minute)
 		select {
 		case <-ctx.Done():
+			initTimer.Stop()
 			return
-		case <-time.After(5 * time.Minute):
+		case <-initTimer.C:
+			initTimer.Stop()
 		}
 
-		checkAndApply(cfg, targetPath, reloadLS)
+		checkAndApply(ctx, cfg, targetPath, reloadLS)
 
 		ticker := time.NewTicker(24 * time.Hour)
 		defer ticker.Stop()
@@ -37,13 +40,13 @@ func StartAutoUpdater(ctx context.Context, cfg *config.Config, reloadLS func()) 
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				checkAndApply(cfg, targetPath, reloadLS)
+				checkAndApply(ctx, cfg, targetPath, reloadLS)
 			}
 		}
 	}()
 }
 
-func checkAndApply(cfg *config.Config, targetPath string, reloadLS func()) {
+func checkAndApply(ctx context.Context, cfg *config.Config, targetPath string, reloadLS func()) {
 	currentVersion := cfg.IDEVersion
 	if currentVersion == "" {
 		currentVersion = "unknown"
@@ -62,7 +65,7 @@ func checkAndApply(cfg *config.Config, targetPath string, reloadLS func()) {
 
 	log.Printf("[auto-updater] new Antigravity %s available (current: %s). Downloading...", info.LatestVersion, currentVersion)
 
-	err = DownloadAndInstall(info.DownloadURL, targetPath, nil)
+	err = DownloadAndInstall(ctx, info.DownloadURL, targetPath, nil)
 	if err != nil {
 		log.Printf("[auto-updater] update failed safely (binary unmodified): %v", err)
 		return
@@ -72,7 +75,9 @@ func checkAndApply(cfg *config.Config, targetPath string, reloadLS func()) {
 	if cfg.LanguageServer == "" {
 		cfg.LanguageServer = targetPath
 	}
-	_ = cfg.Save()
+	if err := cfg.Save(); err != nil {
+		log.Printf("[auto-updater] warning: could not save config.json: %v", err)
+	}
 
 	log.Printf("[auto-updater] successfully updated Antigravity to %s at %s", info.LatestVersion, targetPath)
 

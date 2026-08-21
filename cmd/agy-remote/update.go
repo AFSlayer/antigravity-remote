@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -75,7 +76,7 @@ func updateCommand(args []string) error {
 
 	fmt.Printf("\n  Downloading official Antigravity build...\n")
 	var lastPct int = -1
-	err = updater.DownloadAndInstall(info.DownloadURL, targetPath, func(downloaded, total int64) {
+	err = updater.DownloadAndInstall(context.Background(), info.DownloadURL, targetPath, func(downloaded, total int64) {
 		if total > 0 {
 			pct := int(float64(downloaded) / float64(total) * 100)
 			if pct != lastPct {

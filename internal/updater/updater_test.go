@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,26 @@ import (
 	"path/filepath"
 	"testing"
 )
+
+func TestValidateDownloadURL(t *testing.T) {
+	tests := []struct {
+		url     string
+		wantErr bool
+	}{
+		{"https://storage.googleapis.com/antigravity-public/antigravity-hub/2.9.1-4871453687021568/linux-x64/Antigravity.tar.gz", false},
+		{"http://127.0.0.1:8765/test.tar.gz", false},
+		{"http://localhost:8765/test.tar.gz", false},
+		{"https://evil.example.com/malicious.tar.gz", true},
+		{"https://storage.googleapis.com/other-bucket/file.tar.gz", true},
+	}
+
+	for _, tt := range tests {
+		err := ValidateDownloadURL(tt.url)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("ValidateDownloadURL(%q) error = %v, wantErr %v", tt.url, err, tt.wantErr)
+		}
+	}
+}
 
 func TestPlatformSlug(t *testing.T) {
 	tests := []struct {
@@ -101,7 +122,7 @@ func TestDownloadAndExtractTarGz(t *testing.T) {
 	targetPath := filepath.Join(tmpDir, "bin", "language_server")
 
 	var progressCalls int
-	err := DownloadAndInstall(srv.URL+"/test.tar.gz", targetPath, func(downloaded, total int64) {
+	err := DownloadAndInstall(context.Background(), srv.URL+"/test.tar.gz", targetPath, func(downloaded, total int64) {
 		progressCalls++
 	})
 	if err != nil {

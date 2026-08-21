@@ -18,6 +18,15 @@ var (
 	hubVersionRe = regexp.MustCompile(`/antigravity-hub/([0-9][0-9.]*)-[0-9]+/`)
 )
 
+// ValidateDownloadURL verifies that the URL points to the trusted Google Cloud Storage hub bucket.
+func ValidateDownloadURL(rawURL string) error {
+	if strings.HasPrefix(rawURL, "https://storage.googleapis.com/antigravity-public/antigravity-hub/") ||
+		strings.HasPrefix(rawURL, "http://127.0.0.1:") || strings.HasPrefix(rawURL, "http://localhost:") {
+		return nil
+	}
+	return fmt.Errorf("untrusted download URL domain: %s", rawURL)
+}
+
 // PlatformSlug maps runtime.GOOS and runtime.GOARCH to the official Antigravity hub artifact path.
 func PlatformSlug(goos, goarch string) (string, error) {
 	switch goos {
