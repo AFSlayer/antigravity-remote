@@ -134,6 +134,9 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
+> [!NOTE]
+> **리버스 프록시 및 CDN 대용량 업로드 용량 제한**: `agy-remote` 자체는 스트리밍 방식으로 파일 크기 제한이 없으나, 앞단의 웹 서버나 CDN(예: Nginx는 `client_max_body_size` 기본값 1MB, Cloudflare 무료 플랜은 100MB 제한)에 의해 업로드가 차단될 수 있습니다. 대용량 파일 첨부 시 `413 Request Entity Too Large` 에러가 발생하면 앞단 프록시의 요청 바디 용량 설정을 늘려주세요.
+
 나머지는 [SECURITY.md](SECURITY.md)에 있다. 가능하면 Tailscale, 안 되면 HTTPS.
 
 ## 명령어
@@ -185,10 +188,10 @@ go test ./...
 go run ./cmd/agy-remote
 ```
 
-볼 만한 건 [`internal/patches`](internal/patches)다. 패치는 앵커 문자열을 가진 구조체고,
+볼 만한 건 [`internal/patches`](internal/patches)다. 패치는 문자열 리터럴 또는 적응형 정규식을 가진 구조체고,
 `All()`에 하나 넣으면 테스트, `doctor`, 제어판, 캐시 키가 알아서 받아간다.
 
-Antigravity 번들은 이 저장소에 없다. 그래서 `patches_test.go`는 합성 문서로 엔진을
+Antigravity 번들은 이 저장소에 없다. 그래서 `patches_test.go`는 합성 픽스처로 엔진을
 테스트하고, `live_test.go`는 실행 중인 language server에서 실제 번들을 받아 앵커를
 확인한다(안 켜져 있으면 skip). 태그 붙이기 전에 데스크톱 앱을 켜고
 `go test ./internal/patches -run Live -v`를 돌리면 된다.

@@ -118,6 +118,9 @@ token 缺失时 `agy-remote` 会把这条命令打出来。
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
+> [!NOTE]
+> **反向代理与 CDN 大文件上传大小限制**：`agy-remote` 本身采用流式传输，没有内部文件大小上限。但在前置反向代理或 CDN 时（例如 Nginx 的 `client_max_body_size` 默认 1MB，Cloudflare 免费版限制 100MB），大文件可能被拦截并报错 `413 Request Entity Too Large`。遇到该问题请增大前端代理的请求体大小限制。
+
 其余见 [SECURITY.md](SECURITY.md)。能用 Tailscale 就用，不能就上 HTTPS。
 
 ## 命令

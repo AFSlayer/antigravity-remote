@@ -14,6 +14,8 @@ equivalent to shell access.
 | Sessions | 256-bit random tokens. Only their SHA-256 hashes are written to disk, so a stolen `sessions.json` grants nothing. Default lifetime 30 days (`--session-days`). |
 | Cookies | `HttpOnly`, `SameSite=Lax`, and `Secure` whenever the request arrived over HTTPS. |
 | Rate limiting | 5 failed attempts per IP per 5 minutes, then an exponential lockout up to 30 minutes. A global limiter (60 failures/minute) blunts distributed guessing. The lockout applies even to the correct password. |
+| File uploads | Streaming multipart upload to workspace with strict boundary checking (`filepath.Rel`) to prevent path traversal. Expired uploads are automatically purged by a lightweight background cleaner (default TTL: 7 days). |
+| Binary updates | Official `language_server` downloads are strictly validated against Google Cloud Storage (`storage.googleapis.com/antigravity-public/`). Installation uses atomic filesystem renames so failures never corrupt running binaries. |
 | Revocation | `agy-remote sessions revoke` or "Sign out all" in the control panel invalidates every device immediately. |
 | Admin surface | The control panel (QR code, password, shutdown) listens on a **separate loopback-only port** and is never routed through the public listener. |
 | Login QR | The QR code carries a single-use enrollment token valid for 10 minutes, so you never type the password on a phone. Reuse is rejected. |
@@ -26,12 +28,13 @@ If a proxy terminates TLS in front of `agy-remote`, tell it which peers to trust
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32,::1/128
 ```
 
-Without `--trusted-proxies`, `X-Forwarded-For` and `X-Forwarded-Proto` are
-ignored — which is the safe default, but it means rate limiting sees only the
-proxy's address and cookies are not marked `Secure`. `agy-remote doctor` warns
-when `--public-url` is set without trusted proxies.
-
 Never list a CIDR you do not control. A trusted peer can claim any client IP.
+
+### Proxy upload payload limits
+`agy-remote` streams uploads with no internal payload limit. However, front-facing reverse proxies and CDNs often impose default limits (e.g. Nginx defaults to 1 MB with `client_max_body_size`, and Cloudflare Free caps at 100 MB). If users encounter `413 Request Entity Too Large` when uploading large logs or traces, configure your proxy accordingly:
+- **Nginx**: `client_max_body_size 100M;` (or larger)
+- **Caddy**: default is unlimited, or tune `request_body { max_size ... }`
+- **Cloudflare**: for files > 100 MB, use Tailscale or a direct tunnel bypass.
 
 ## Recommended deployments
 

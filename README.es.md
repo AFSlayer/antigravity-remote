@@ -136,6 +136,9 @@ forwarded:
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
+> [!NOTE]
+> **Límites de tamaño de subida en proxies inversos y CDN**: Aunque `agy-remote` no impone límites internos al subir archivos, los proxies o CDN (como Nginx con `client_max_body_size` por defecto en 1MB o Cloudflare Free con 100MB) pueden bloquear subidas grandes con `413 Request Entity Too Large`. Ajusta el límite de tamaño de petición en tu proxy para resolverlo.
+
 El resto está en [SECURITY.md](SECURITY.md). Tailscale si puedes, HTTPS si no.
 
 ## Comandos

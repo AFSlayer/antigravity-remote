@@ -131,6 +131,9 @@ scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
+> [!NOTE]
+> **リバースプロキシや CDN によるアップロードサイズ制限**: `agy-remote` 自体にはファイルサイズの内部制限はありませんが、前段のプロキシや CDN（Nginx の `client_max_body_size` デフォルト 1MB、Cloudflare 無料枠の 100MB 制限など）によって遮断される場合があります。大容量ファイルのアップロードで `413 Request Entity Too Large` が発生した場合は、プロキシ側のリクエストボディ上限設定を緩和してください。
+
 残りは [SECURITY.md](SECURITY.md)。可能なら Tailscale、無理なら HTTPS。
 
 ## コマンド

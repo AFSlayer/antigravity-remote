@@ -144,6 +144,9 @@ Behind a reverse proxy, say which peers you trust or forwarded headers get ignor
 agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
 ```
 
+> [!NOTE]
+> **Large file uploads via reverse proxies & CDNs**: While `agy-remote` streams uploads with no internal size cap, your front-facing proxy or CDN may enforce body size limits (e.g. Nginx defaults to 1 MB with `client_max_body_size`, and Cloudflare Free tiers cap at 100 MB). If large file uploads return `413 Request Entity Too Large`, increase your proxy's body size limit.
+
 Rest is in [SECURITY.md](SECURITY.md). Use Tailscale if you can and HTTPS if you
 can't.
 
@@ -200,11 +203,11 @@ go run ./cmd/agy-remote
 ```
 
 The interesting directory is [`internal/patches`](internal/patches). A patch is a
-struct with an anchor string; add one to `All()` and the tests, `doctor`, the
-control panel and the cache key pick it up.
+declarative rewrite struct anchored on literal strings or adaptive regular expressions;
+add one to `All()` and the tests, `doctor`, the control panel and the cache key pick it up.
 
 Antigravity's bundle isn't in this repo, so `patches_test.go` tests the engine
-against a synthetic document and `live_test.go` checks the anchors against a real
+against synthetic fixtures and `live_test.go` checks the anchors against a real
 running language server, skipping if there isn't one. Before tagging a release,
 open the desktop app and run `go test ./internal/patches -run Live -v`.
 
