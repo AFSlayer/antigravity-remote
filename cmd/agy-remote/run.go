@@ -24,6 +24,7 @@ import (
 	"github.com/AFSlayer/antigravity-remote/internal/proxy"
 	"github.com/AFSlayer/antigravity-remote/internal/signin"
 	"github.com/AFSlayer/antigravity-remote/internal/ui"
+	"github.com/AFSlayer/antigravity-remote/internal/upload"
 )
 
 type runMode int
@@ -147,6 +148,16 @@ func (r *runner) start() error {
 	for _, path := range assets.Paths() {
 		publicMux.Handle(path, assets.Handler())
 	}
+	uploaderCtx, uploaderCancel := context.WithCancel(context.Background())
+	defer uploaderCancel()
+
+	uploader := upload.New(upload.Options{
+		WorkspaceRoot: r.cfg.WorkspaceRoot,
+		TTL:           upload.DefaultTTL,
+	})
+	uploader.Register(publicMux)
+	uploader.StartCleaner(uploaderCtx, time.Hour)
+
 	ui.NewSignIn(signin.New(instance, r.shimURLFile)).Register(publicMux)
 	if r.cfg.Debug {
 		if debug, err := ui.NewDebug(r.cfg.Path("mobile-debug.log")); err != nil {
