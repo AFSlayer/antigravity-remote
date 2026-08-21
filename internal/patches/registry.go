@@ -13,7 +13,9 @@ var (
 
 	skipOnboardingRe = regexp.MustCompile(`c\.hasOnboardingScreens&&[a-zA-Z0-9_$]+!==2&&[a-zA-Z0-9_$]+\(\{to:"/onboarding",replace:!0,throw:!0\}\)`)
 
-	mobileEnterNewlineRe = regexp.MustCompile(`registerCommand\(([a-zA-Z0-9_$]+),k=>\{if\(!k\)return!1;k\.preventDefault\(\);`)
+	mobileEnterNewlineRe         = regexp.MustCompile(`registerCommand\(([a-zA-Z0-9_$]+),k=>\{if\(!k\)return!1;k\.preventDefault\(\);`)
+	mobileProjectAddButtonRe     = regexp.MustCompile(`if\(d==="project"\|\|d==="environment"\|\|d==="status"\)\{let\s+([a-zA-Z0-9_$]+)=([a-zA-Z0-9_$]+)\?void 0:([a-zA-Z0-9_$]+)==="project"\?"New Conversation in Project":([a-zA-Z0-9_$]+)==="environment"\?"New Conversation in Workspace":[\r\n\s]*void 0`)
+	mobileProjectHeaderActionsRe = regexp.MustCompile(`className:Pm\("absolute right-1 top-0 flex h-full items-center gap-1",([a-zA-Z0-9_$]+)\|\|([a-zA-Z0-9_$]+)\?"opacity-100":"opacity-0 group-hover/header:opacity-100 group-focus-within/header:opacity-100"\)`)
 
 	hideMicButtonRe = regexp.MustCompile(`([a-zA-Z0-9_$]+\.displayName="GutterHoverCommentButton";var )([a-zA-Z0-9_$]+)=\(`)
 
@@ -153,7 +155,7 @@ func All() []Patch {
 			Kind:    Regexp,
 			Enabled: mobile,
 			FindRe:  mobileNewConvoViewRe,
-			Replace: `var $2=()=>{var a=$3(),b=$4();return(0,$5.useCallback)((c,$6)=>{b($7.map(f=>({trigger:f,ran:!1})));a(c,{section:$6,replace:!0})},[a,b])};var $8=()=>{var a=$2(),{q:b,section:sec}=$9({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return $10.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?$10.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},$10.createElement(typeof T!=="undefined"?T:typeof U!=="undefined"?U:"span",{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),$10.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):$10.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},$10.createElement($13,{surface:"background"})),$10.createElement("div",{className:"shrink-0 p-2"},$10.createElement($16,{cascadeId:void 0},$10.createElement($18,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:$10.createElement($20,null),initialQuery:b}))))};`,
+			Replace: `var $2=()=>{var a=$3(),b=$4();return(0,$5.useCallback)((c,$6)=>{b($7.map(f=>({trigger:f,ran:!1})));a(c,{section:$6,replace:!0})},[a,b])};var $8=()=>{var a=$2(),{q:b,section:sec}=$9({strict:!1}),isMobileNew=Boolean(window.matchMedia&&window.matchMedia("(pointer:coarse)").matches&&sec);return $10.createElement("div",{className:"w-full h-full flex flex-col min-h-0 animate-fade-in"},isMobileNew?$10.createElement("div",{className:"flex-1 min-h-0 flex flex-col items-center justify-center gap-3 select-none"},$10.createElement(typeof U==="function"?U:typeof T==="function"?T:"span",{name:"auto_awesome",size:32,className:"text-muted-foreground/30"}),$10.createElement("span",{className:"text-xs text-muted-foreground/60"},"Start a new conversation")):$10.createElement("div",{className:"flex-1 min-h-0 overflow-y-auto flex flex-col gap-6 pt-3"},$10.createElement($13,{surface:"background"})),$10.createElement("div",{className:"shrink-0 p-2"},$10.createElement($16,{cascadeId:void 0},$10.createElement($18,{conversationId:void 0,isLoading:!1,dropdownPlacement:"top-start",openConversationOptimistically:a,showBottomToolbar:!0,aboveContent:$10.createElement($20,null),initialQuery:b}))))};`,
 		},
 
 		// On mobile, show the back button in the main titlebar when a project is selected
@@ -175,6 +177,24 @@ func All() []Patch {
 			Enabled: mobile,
 			FindRe:  mobileBackClearsSectionRe,
 			Replace: `${1}${2}({clearSection:!0})${3}`,
+		},
+		{
+			ID:      "mobile-project-add-button",
+			Desc:    "Enable the New Conversation + button next to project rows on mobile",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileProjectAddButtonRe,
+			Replace: `if(true){let $1=$3==="environment"?"New Conversation in Workspace":"New Conversation in Project"`,
+		},
+		{
+			ID:      "mobile-project-header-actions",
+			Desc:    "Always show project header actions (add conversation button and menu) on touch devices",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileProjectHeaderActionsRe,
+			Replace: `className:Pm("absolute right-1 top-0 flex h-full items-center gap-1","opacity-100")`,
 		},
 
 		// Always start the folder picker at the configured workspace root instead of
@@ -349,18 +369,28 @@ body {
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: var(--agy-bottom, env(safe-area-inset-bottom, 0px)) !important;
+    bottom: var(--agy-bottom, 0px) !important;
     height: auto !important;
     max-height: none !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     box-sizing: border-box !important;
   }
+  div.shrink-0.p-2 {
+    padding: 0.25rem 0.5rem 0 0.5rem !important;
+  }
+  /* When keyboard is active, collapse the safe-area inset on the input box so it hugs the keyboard tightly */
+  body.agy-kb-open [data-testid="agent-input-box"],
+  html[style*="--agy-bottom"] [data-testid="agent-input-box"],
+  body.agy-kb-open .shrink-0.p-2,
+  html[style*="--agy-bottom"] .shrink-0.p-2 {
+    padding-bottom: 0px !important;
+  }
   .aux-drawer-popup {
     padding-bottom: var(--agy-bottom, env(safe-area-inset-bottom, 0px)) !important;
   }
   .fixed.bottom-3 {
-    bottom: calc(0.75rem + var(--agy-bottom, env(safe-area-inset-bottom, 0px))) !important;
+    bottom: calc(0.75rem + var(--agy-bottom, 0px)) !important;
   }
 }
 </style>`
@@ -427,6 +457,7 @@ const keyboardDetect = `<script id="agy-keyboard-detect">
   var predicted = 0;
   try {
     predicted = parseInt(localStorage.getItem("agy-kb"), 10) || 0;
+    if (predicted < 100) predicted = 0;
   } catch (e) {}
   var holdUntil = 0;
 
@@ -443,10 +474,12 @@ const keyboardDetect = `<script id="agy-keyboard-detect">
 
     var opening = applied === 0 && kb > 0;
     applied = kb;
-    if (kb) {
+    if (kb > 0) {
       document.documentElement.style.setProperty("--agy-bottom", kb + "px");
+      document.body.classList.add("agy-kb-open");
     } else {
       document.documentElement.style.removeProperty("--agy-bottom");
+      document.body.classList.remove("agy-kb-open");
     }
     if (opening) scrollChatToBottom();
   }
@@ -455,7 +488,7 @@ const keyboardDetect = `<script id="agy-keyboard-detect">
     unpan();
 
     var target = Math.max(0, Math.round(base() - vv.height));
-    if (target <= 20) target = 0;
+    if (target < 100) target = 0;
 
     if (target > 0) {
       holdUntil = 0;
@@ -526,6 +559,10 @@ const keyboardDetect = `<script id="agy-keyboard-detect">
       }
       track(900);
     }
+  });
+
+  window.addEventListener("focusout", function () {
+    track(500);
   });
 })();
 </script>`
