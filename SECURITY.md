@@ -60,7 +60,7 @@ Tailscale instead.
 
 ## Reporting a vulnerability
 
-Please open a [private security advisory](https://github.com/AFSlayer/antigravity-remote/security/advisories/new)
+Please open a [private security advisory](https://github.com/AFSlayer/antigravity-server/security/advisories/new)
 rather than a public issue. Include the version (`agy-remote version`), the
 deployment shape, and reproduction steps. Expect a first response within a week.
 

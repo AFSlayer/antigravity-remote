@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AFSlayer/antigravity-remote/internal/patches"
+	"github.com/AFSlayer/antigravity-server/internal/patches"
 )
 
 // These tests cover the proxy plumbing — reading, rewriting and re-framing

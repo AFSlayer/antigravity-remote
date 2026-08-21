@@ -4,7 +4,7 @@
 
 **在手机上使用 Antigravity 桌面版。**
 
-[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-remote?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-remote/releases/latest)
+[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 <img src="docs/assets/demo.gif" width="300" alt="在手机上让 agent 查看服务器状态" />
@@ -32,12 +32,12 @@ Antigravity 桌面版里带了一个 `language_server`。跟 Google 通信的是
 
 ```bash
 # macOS、Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
 装完就启动。控制面板会打开并显示二维码，手机扫一下就进去了，不用输密码。二维码里是一个
@@ -61,7 +61,7 @@ server 就绪，再找出哪个端口在提供界面。
 放到 Linux 机器上，合上笔记本 Antigravity 也照样跑。便宜的 VPS 或免费档的 ARM 实例就够。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
 它会问域名和工作目录，从 Google 的 `storage.googleapis.com` 下载官方构建包，只取出

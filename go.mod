@@ -1,4 +1,4 @@
-module github.com/AFSlayer/antigravity-remote
+module github.com/AFSlayer/antigravity-server
 
 go 1.24
 

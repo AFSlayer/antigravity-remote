@@ -4,7 +4,7 @@
 
 **Usa la app de escritorio de Antigravity desde el móvil.**
 
-[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-remote?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-remote/releases/latest)
+[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 <img src="docs/assets/demo.gif" width="300" alt="Pidiendo el estado del servidor a un agente desde el móvil" />
@@ -36,12 +36,12 @@ coincidir.
 
 ```bash
 # macOS, Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
 Se instala y arranca. Se abre un panel de control con un código QR. Lo escaneas y
@@ -69,7 +69,7 @@ En una máquina Linux, Antigravity sigue trabajando con el portátil cerrado. Ba
 VPS barato o una instancia ARM de nivel gratuito.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
 Pregunta el dominio y la carpeta de trabajo, descarga la build oficial desde el

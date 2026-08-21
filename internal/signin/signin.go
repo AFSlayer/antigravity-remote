@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AFSlayer/antigravity-remote/internal/lsproc"
+	"github.com/AFSlayer/antigravity-server/internal/lsproc"
 )
 
 const (

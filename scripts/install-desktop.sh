@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="AFSlayer/antigravity-remote"
+REPO="AFSlayer/antigravity-server"
 BINARY_URL="${AGY_BINARY_URL:-}"
 START="yes"
 

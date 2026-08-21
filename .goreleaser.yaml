@@ -1,12 +1,29 @@
 version: 2
 
-project_name: agy-remote
+project_name: agy-server
 
 before:
   hooks:
     - go mod tidy
 
 builds:
+  - id: agy-server
+    main: ./cmd/agy-server
+    binary: agy-server
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
   - id: agy-remote
     main: ./cmd/agy-remote
     binary: agy-remote
@@ -60,22 +77,22 @@ release:
     **macOS / Linux — one line, no security warnings**
 
     ```bash
-    curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
     ```
 
     **Windows — one line in PowerShell**
 
     ```powershell
-    irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+    irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
     ```
 
     **Linux server (always-on Antigravity)**
 
     ```bash
-    curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
     ```
 
     Prefer to download the archive by hand? These builds are not code-signed, so
     macOS and Windows will warn you about an unidentified developer. The install
     commands above download with `curl`/`irm`, which avoids that entirely — see
-    [Installing without warnings](https://github.com/AFSlayer/antigravity-remote#installing-without-warnings).
+    [Installing without warnings](https://github.com/AFSlayer/antigravity-server#installing-without-warnings).

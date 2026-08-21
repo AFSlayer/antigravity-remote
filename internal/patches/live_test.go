@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/AFSlayer/antigravity-remote/internal/lsproc"
+	"github.com/AFSlayer/antigravity-server/internal/lsproc"
 )
 
 // TestAnchorsMatchLiveBundle is the check that actually proves the patches still

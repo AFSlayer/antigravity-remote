@@ -14,9 +14,9 @@ import (
 
 	qrcode "github.com/skip2/go-qrcode"
 
-	"github.com/AFSlayer/antigravity-remote/internal/assets"
-	"github.com/AFSlayer/antigravity-remote/internal/auth"
-	"github.com/AFSlayer/antigravity-remote/internal/patches"
+	"github.com/AFSlayer/antigravity-server/internal/assets"
+	"github.com/AFSlayer/antigravity-server/internal/auth"
+	"github.com/AFSlayer/antigravity-server/internal/patches"
 )
 
 //go:embed templates

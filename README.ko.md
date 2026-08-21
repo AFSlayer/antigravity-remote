@@ -1,11 +1,12 @@
 <div align="center">
 
-# Antigravity Remote
+# Antigravity Server
 
-**Antigravity 데스크톱 앱을 폰에서 쓰기.**
+**Google Antigravity를 위한 셀프호스팅 클라우드 & 모바일 서버.**  
+*내 서버나 데스크톱에서 개인 전용 AI 코딩 IDE를 띄우고, 폰이나 브라우저에서 렉 없이 어디서나 접속하세요.*
 
-[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-remote?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-remote/releases/latest)
-[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-remote/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-remote/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-server/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-server/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
 <img src="docs/assets/demo.gif" width="300" alt="폰에서 에이전트에게 서버 상태를 물어보는 모습" />
@@ -14,13 +15,26 @@
 
 </div>
 
+## 왜 Antigravity Server 인가? (공식 원격 접속과의 차이)
+
+Google에서 공식 원격 브릿지(`antigravity.google.com/r/...`)를 제공하지만, **`antigravity-server`**는 셀프 호스팅 및 모바일 파워 유저를 위해 완전히 다른 아키텍처와 압도적인 편의성을 제공합니다:
+
+| 비교 항목 | 구글 공식 원격 접속 | Antigravity Server (`agy-server`) |
+| :--- | :--- | :--- |
+| **연결 방식 & 지연시간** | **클라우드 중계 브릿지** (구글 서버를 경유하여 핑이 튀고 연결 끊김 발생) | **직통 연결 / 리버스 프록시** (LAN/P2P/내 VPS와 1:1 직통 통신으로 초저지연) |
+| **24/7 클라우드 서버 (헤드리스)** | ❌ GUI 데스크톱 앱을 켜두고 주기적으로 QR코드를 찍어야 함 | ✅ **GUI 없는 리눅스 VPS / 오라클 클라우드 VM 24시간 상시 구동** & 자동 업데이트 |
+| **프로젝트 (+) 새 대화 시작** | ❌ 모바일에서 버튼이 숨겨져 하단 입력창에서 번거롭게 프로젝트 변경 필요 | ✅ **프로젝트 목록 옆 `+` 버튼 복원**으로 원클릭 새 대화 생성 |
+| **iOS / PWA Safe Area 최적화** | ⚠️ 하단 안전영역이 과도하게 붕 뜨거나 키보드 오픈 시 네비게이션 증발 | ✅ **완벽한 PWA 뷰포트**: 1배수 홈 바 안착 및 가상 키보드 오픈 시 0px 밀착 |
+| **대용량 파일 스트리밍 업로드** | ❌ 1MB 제한; 워크스페이스 직접 대용량 데이터 업로드 불가 | ✅ **청크 스트리밍 업로더**: 100MB+ 로그, HAR, 압축파일을 워크스페이스로 전송 |
+| **프라이버시 & 보안** | 구글 계정 로그인 및 구글 중계망에 종속 | 자체 도메인 + PBKDF2 암호화 비밀번호, 무차별 대입 방어, Tailscale/VPN 호환 |
+
 ## 뭔가
 
 Antigravity 데스크톱 앱에는 `language_server`라는 바이너리가 들어 있다. Google과
 통신하는 건 이 녀석이고, `--standalone`을 붙이면 Antigravity UI 전체를 웹앱으로도
 서브한다. 듣는 주소가 `127.0.0.1` 뿐이라는 게 문제다.
 
-`agy-remote`는 그 앞에 비밀번호를 걸고 내 네트워크로 넘겨준다. 지나가는 JS 번들의
+`agy-server` (또는 `agy-remote`)는 그 앞에 비밀번호를 걸고 내 네트워크로 넘겨준다. 지나가는 JS 번들의
 문자열도 몇 개 고쳐 쓴다. 데스크톱 IDE를 폰 브라우저에서 쓰면 걸리는 데가 있어서다.
 
 같은 일을 하는 프로젝트들은 자체 UI를 만들거나 CDP로 화면을 미러링한다. 이건
@@ -34,12 +48,12 @@ Antigravity 자기 UI를 서브한다. 그래서 터미널, 파일 트리, artif
 
 ```bash
 # macOS, Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install-desktop.ps1 | iex
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
 설치하고 바로 뜬다. 제어판이 열리고 QR 코드가 나온다. 폰으로 찍으면 끝이고 비밀번호는
@@ -64,7 +78,7 @@ Antigravity를 미리 켜둘 필요는 없다. 안 켜져 있으면 `agy-remote`
 ARM 인스턴스로 충분하다.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-remote/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
 도메인과 워크스페이스 폴더를 물어보고, Google의 `storage.googleapis.com`에서 공식
