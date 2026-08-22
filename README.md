@@ -2,229 +2,276 @@
 
 # Antigravity Server
 
-**Self-hosted cloud & mobile server for Google Antigravity.**  
-*Run your personal AI coding IDE on your server or desktop, access it from any phone or browser with zero lag.*
+Self-hosted server and web interface bridge for Google Antigravity.  
+Run Antigravity 24/7 on a headless Linux instance or local desktop, accessible directly via any web browser.
 
 [![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
 [![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-server/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-server/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
-<img src="docs/assets/demo.gif" width="300" alt="Asking an agent for the server state from a phone" />
+<img src="docs/assets/demo.gif" width="320" alt="Antigravity Server running on mobile browser" />
 
 [한국어](README.ko.md) · [中文](README.zh-CN.md) · [日本語](README.ja.md) · [Português](README.pt-BR.md) · [Español](README.es.md)
 
 </div>
 
+---
+
 ## Why Antigravity Server? (vs Official Remote)
 
-Google now offers an official remote bridge (`antigravity.google.com/r/...`), but **`antigravity-server`** provides a fundamentally different, faster, and more powerful architecture tailored for self-hosters and mobile power users:
+Google provides an official remote bridge (`antigravity.google.com/r/...`), which routes traffic through a cloud relay and requires a desktop GUI application to remain active.
+
+`agy-server` runs headlessly on a Linux cloud instance or local server, providing direct network access and mobile-first runtime patches:
 
 | Feature | Official Google Remote | Antigravity Server (`agy-server`) |
 | :--- | :--- | :--- |
-| **Connection & Latency** | **Cloud Relay Bridge** (routed through Google servers, noticeable lag & disconnects) | **Direct Connection / Reverse Proxy** (Direct LAN/P2P/VPS connection, ultra-low latency) |
-| **24/7 Headless VPS** | ❌ Requires running desktop GUI app and scanning QR code periodically | ✅ **Native Headless Linux VPS / Cloud VM** support with systemd service & auto-updater |
-| **Mobile Project (+) Action** | ❌ Omitted on mobile; forced to switch projects via bottom input | ✅ **Restored (+) New Conversation** button directly beside project headers |
-| **iOS / PWA Safe Area** | ⚠️ Giant bottom safe-area gaps; navigation bar disappears on keyboard open | ✅ **Pixel-Perfect PWA Layout**: 1x Safe Area insets and dynamic 0px keyboard snug fit |
-| **Large File Streaming** | ❌ 1MB limit; cannot upload datasets or raw archives | ✅ **Chunked Streaming Uploader**: upload 100MB+ logs, HARs, and assets directly to workspace |
-| **Privacy & Access Control** | Bound to Google Account login & Google cloud relay | Self-hosted domain, PBKDF2 password protection, rate-limiting, and VPN compatibility |
+| **Hosting Mode** | Requires a desktop computer running the GUI app | **Headless Linux VPS / Cloud VM** (systemd service, auto-updater) |
+| **Connection & Latency** | Cloud relay through Google servers | **Direct Connection** (LAN, VPN, or reverse proxy with HTTPS) |
+| **Mobile Project Management** | No project `(+)` button; requires switching projects via bottom input | **Restored project `(+)` button** in project list headers |
+| **Conversation Control** | No conversation deletion, pin, or archive in mobile views | **Conversation controls**: Delete, Rename, Pin, and Archive on touch |
+| **Message Actions** | Undo and Copy buttons hidden behind hover states | **Undo (`↶`) and Copy (`📋`) buttons** visible on touch devices |
+| **iOS / PWA Keyboard Fit** | Bottom safe-area gap remains; viewport jumps on focus | **0px keyboard fit**: dynamic safe area collapse and viewport tracking |
+| **File Uploads** | 1MB RPC text limit | **Chunked streaming uploader**: upload large logs, HARs, and assets directly |
+| **Authentication & Privacy** | Bound to Google Account login & Google cloud relay | Password-protected (PBKDF2), session management, and rate-limiting |
 
-## What it is
+---
 
-The Antigravity desktop app ships a binary called `language_server`. It's what
-talks to Google, and with `--standalone` it also serves the whole Antigravity UI as
-a web app. It only listens on `127.0.0.1`.
+## Quick Start
 
-`agy-server` (or `agy-remote`) puts a password in front of it and forwards it to your network. It
-also rewrites a few strings in the JS bundle on the way through, since a desktop
-IDE in a phone browser has some rough edges.
+### Option 1: Linux Server / Cloud VPS (Recommended)
 
-Other projects that do this build their own UI, or mirror the screen over CDP. This
-one serves Antigravity's own, so the terminal, file tree, artifacts and browser agent
-all work, and new Google features appear without any work here.
-
-The catch: patching a minified bundle is fragile. An Antigravity update can break a
-patch. `agy-remote` checks all of them at startup and tells you which stopped
-matching.
-
-## Install
-
-```bash
-# macOS, Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
-```
-
-```powershell
-# Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
-```
-
-It installs and starts. A control panel opens with a QR code. Scan it and you're
-in, no password to type. The code holds a one-time token good for ten minutes.
-
-<div align="center">
-<img src="docs/assets/control-panel.png" width="320" alt="Control panel" />
-</div>
-
-Antigravity doesn't need to be open first. If it isn't, `agy-remote` starts it,
-turns on remote control, waits for the language server, and works out which of its
-ports serves the UI.
-
-On the phone use Share → *Add to Home Screen*. You get the Antigravity icon on the
-home screen.
-
-The binaries aren't code-signed, so downloading an archive in a browser gets it
-quarantined. macOS: right-click, **Open**, **Open** again. Windows: **More info** →
-**Run anyway**. The install commands above use `curl`, which doesn't set the
-quarantine flag, so they skip all of that.
-
-## On a server
-
-On a Linux box, Antigravity keeps working with your laptop closed. A cheap VPS or a
-free-tier ARM instance is enough.
+Run Antigravity on a headless Linux instance (Oracle Cloud Free Tier, AWS, DigitalOcean, or a home server):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
-It asks for a domain and a workspace folder, pulls the official Antigravity build
-from Google's `storage.googleapis.com`, and takes out just the 165 MB
-`language_server`. No Google binary is redistributed here. Then it writes a systemd
-unit, sets up Caddy for HTTPS, and makes a password.
+The installer:
+1. Prompts for your domain (e.g. `agy.example.com`) and workspace root.
+2. Downloads `language_server` directly from Google's official build bucket (`storage.googleapis.com`). No Google binaries are redistributed.
+3. Configures Caddy for automatic HTTPS, creates a systemd service, and sets access credentials.
 
-Since it's the same web UI, a laptop browser works too, and it looks and behaves
-like the desktop app. Conversations, workspaces and running agents live on the
-server, so you can start something on your phone on the train and keep going on a
-desktop when you get in. Nothing syncs because there's only one instance.
+#### Google Authentication
+When accessing your server for the first time:
+- **Direct Web Login**: Open the Web UI, navigate to **Settings**, and complete Google authentication directly in your browser.
+- **Or Copy Existing Token (Optional)**: If you already logged in on a local desktop, you can copy your token to skip re-authenticating:
+  ```bash
+  scp ~/.gemini/jetski-standalone-oauth-token user@your-server:~/.gemini/
+  ```
 
-One step isn't automatic. Antigravity signs in through an OAuth callback on
-`localhost`, which a remote server can't receive. Copy the token from a machine
-where you already use the desktop app:
+---
+
+### Option 2: Desktop Companion (macOS, Windows, Linux Desktop)
+
+To expose a local desktop Antigravity instance over your local network:
 
 ```bash
-scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
+# macOS & Linux
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
-`agy-remote` prints that command when the token is missing.
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
+```
 
-## What gets patched
-
-Twenty-five patches, each described in
-[`internal/patches/registry.go`](internal/patches/registry.go). `agy-remote doctor`
-says which applied.
-
-| Problem | Patch |
-| --- | --- |
-| The bundle calls `https://127.0.0.1:<port>`, which from a phone is the phone | Use the browser's origin |
-| Enter sends mid-sentence | On touch, Enter is a newline and Cmd/Ctrl+Enter sends |
-| Tapping a model picks medium and closes the menu | Tap opens the effort submenu |
-| "Enable Notifications" banner on the first reply | Skip it on touch devices |
-| A mic button that can't work, since standalone has no transcription | Hide it |
-| Dead user profile placeholder icon in the mobile titlebar | Hide it |
-| Tapping `+` on mobile doesn't open a dedicated composer | Open new conversation view directly & integrate back button in mobile titlebar |
-| New projects start in `/` | Start in the workspace folder you set |
-| Large files (.har, logs) freeze browser or fail with 20MB RPC limit | Stream directly to workspace asynchronously with native progress UI |
-| Non-standard files (.har, .jsonl) rejected by attachment | Allow all file types and parse text/data payloads |
-| No icon, 300 ms tap delay | The Antigravity icon, instant taps |
-| iOS home bar overlap & virtual keyboard pushing view offscreen | Safe area insets & viewport height sync |
-| Standalone build cannot sign in from a remote browser | Connect Settings sign-in button to web auth flow |
-
-`agy-remote --no-mobile-patches` leaves the UI alone.
+`agy-server` opens a local control panel with a QR code. Scan the code from a phone on the same network to connect without typing a password.
 
 <div align="center">
-<table><tr>
-<td align="center"><img src="docs/assets/patch-models.png" width="190" alt="Model picker" /></td>
-<td align="center"><img src="docs/assets/patch-effort.png" width="190" alt="Effort submenu" /></td>
-<td align="center"><img src="docs/assets/settings.png" width="190" alt="Settings" /></td>
-</tr></table>
+<img src="docs/assets/control-panel.png" width="320" alt="Control Panel" />
 </div>
+
+---
+
+## Mobile PWA & Client Setup
+
+Antigravity Server supports the Progressive Web App (PWA) standard. Adding it to your mobile home screen launches the interface in a **fullscreen, standalone view with no browser address bar or navigation buttons**:
+
+- **iOS (Safari)**: Tap the **Share button (`⎋`)** → Select **Add to Home Screen**.
+- **Android (Chrome)**: Tap the **Menu (`⋮`)** → Select **Install app** or **Add to Home screen**.
+
+> [!TIP]
+> Running in standalone PWA mode ensures virtual keyboard transitions and 0px safe-area collapse operate smoothly without browser toolbar jumps.
+
+---
+
+## Key Features
+
+### ⚡ Mobile-First UX Patches
+- **Touch-Friendly Controls**: Undo (`↶`) and Copy (`📋`) buttons remain permanently visible on mobile message bubbles.
+- **Full Conversation Management**: Delete conversations via the titlebar menu and toggle Pin/Archive directly from the history dropdown.
+- **Precise Keyboard Tracking**: Automatically collapses safe area insets to 0px when the on-screen keyboard appears.
+
+---
+
+### 📁 Chunked Streaming File Uploads
+Standard Antigravity restricts file attachments via a 1MB RPC limit. `agy-server` injects a chunked streaming uploader to transfer large logs, datasets, or HAR files directly into your workspace:
+
+<div align="center">
+<img src="docs/assets/upload.gif" width="560" alt="Chunked Streaming File Uploader Demo" />
+</div>
+
+---
+
+### 🖥️ Desktop & Tablet Web Interface
+In addition to mobile devices, Antigravity Server runs smoothly in any modern desktop browser:
+
+<div align="center">
+<img src="docs/assets/desktop.png" width="700" alt="Antigravity Web UI on Desktop Browser" />
+</div>
+
+---
+
+### 🔄 Zero-Downtime Automatic Updates
+On headless Linux servers, `agy-server` includes a background auto-updater service:
+- Checks Google's official release buckets daily for new `language_server` versions.
+- Downloads and replaces the core binary atomically with zero downtime.
+- Manual check & upgrade: run `agy-server update`.
+
+---
+
+## Production & Reverse Proxy Setup
+
+Antigravity uses Server-Sent Events (SSE), WebSocket connections, and chunked streaming. If running behind a custom reverse proxy, disable proxy buffering and configure WebSocket upgrades:
+
+### Caddy
+```caddyfile
+agy.example.com {
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:8765 {
+        flush_interval -1
+    }
+}
+```
+
+### Nginx
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name agy.example.com;
+
+    # Allow large chunked streaming uploads
+    client_max_body_size 0;
+
+    location / {
+        proxy_pass http://127.0.0.1:8765;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Disable buffering for real-time agent token streaming
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400s;
+
+        # Forward real client IP
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+> [!IMPORTANT]
+> When running behind a reverse proxy, pass `--trusted-proxies 127.0.0.1/32` (or set `AGY_TRUSTED_PROXIES=127.0.0.1/32`) so brute-force rate limiters inspect the genuine client IP rather than the proxy.
+
+---
+
+## How It Works
+
+Antigravity includes a standalone binary named `language_server`. When run with `--standalone`, it serves the Antigravity Web UI on `127.0.0.1`.
+
+`agy-server` acts as a reverse proxy to:
+- Handle authentication (PBKDF2 hashing, cookie sessions, rate-limiting).
+- Apply on-the-fly JS/CSS patches for touch devices.
+- Provide a chunked streaming endpoint for large file uploads.
+
+```
+  Phone / Tablet / Laptop Browser
+                │
+                ▼ HTTPS (Port 443 / 8765)
+  ┌──────────────────────────────────────────────┐
+  │ agy-server (Reverse Proxy & Auth)            │
+  │  - PBKDF2 Session & Rate Limiting            │
+  │  - Chunked Streaming Uploader (/uploads)     │
+  │  - On-the-fly Web Bundle Patcher             │
+  └──────────────────────┬───────────────────────┘
+                         │ localhost
+                         ▼
+  ┌──────────────────────────────────────────────┐
+  │ language_server --standalone                 │
+  │  - Official Antigravity Core & Agent Engine   │
+  │  - Terminal, File Tree, Artifacts, Composer   │
+  └──────────────────────┬───────────────────────┘
+                         │ gRPC
+                         ▼
+                Google CloudCode API
+```
+
+---
+
+## Mobile UX Patches
+
+`agy-server` applies runtime patches defined in [`internal/patches/registry.go`](internal/patches/registry.go) to adapt desktop web bundle behaviors for mobile browsers:
+
+| Category | Desktop Bundle Behavior | agy-server Patch |
+| :--- | :--- | :--- |
+| **Navigation** | Project `(+)` button omitted on mobile screens | Restores the `(+)` New Conversation button next to each project row |
+| **Conversation Actions** | No delete, pin, or archive on touch | Adds Delete, Pin, and Archive to the `⋮` kebab menu and titlebar |
+| **Message Actions** | Undo and Copy buttons hidden behind hover states | Displays Undo (`↶`) and Copy (`📋`) buttons on touch devices |
+| **Virtual Keyboard** | iOS Safari viewport bounces and leaves blank gaps | Collapses bottom safe-area insets to 0px while keyboard is active |
+| **File Uploads** | 1MB RPC payload limit fails on logs or datasets | Streams files asynchronously to disk via chunked streaming endpoint |
+| **Touch Interaction** | 300ms tap delay and double-tap zoom | Sets `touch-action: manipulation` for immediate touch response |
+| **Input Behavior** | Mobile Enter key sends message instead of newline | Enter creates a newline; Send button or Cmd/Ctrl+Enter submits |
+| **Model Selection** | Tapping a model closes the menu immediately | Opens the reasoning effort submenu on tap |
+
+Run `agy-server doctor` to inspect the status of all patches against your installed bundle.
+
+---
+
+## CLI Commands
+
+```
+agy-server                      Start in desktop companion mode (local network)
+agy-server serve                Run as a headless server daemon
+agy-server update               Check and update language_server to latest upstream
+agy-server doctor               Verify patch integrity and system status
+agy-server passwd [password]    Set or reset web access password
+agy-server sessions [revoke]    List active sessions or revoke all devices
+agy-server config [flags]       Manage configuration in config.json
+```
+
+All CLI flags can be set via environment variables prefixed with `AGY_` (e.g. `AGY_PORT=8765`, `AGY_PUBLIC_URL=https://agy.example.com`).
+
+---
 
 ## Security
 
-Whoever gets in can read your files and run commands, so this is closer to shell
-access than to sharing a doc.
+- **Password Protection**: Passwords are hashed with PBKDF2-SHA256 (200,000 iterations).
+- **Session Tokens**: 256-bit random tokens; only SHA-256 hashes are stored on disk.
+- **Brute-Force Protection**: 5 failed login attempts trigger an IP lockout (5 to 30 minutes).
+- **Upload Isolation**: File uploads are restricted to the configured project directory; path traversal attempts (`../`) are rejected.
+- **Trusted Proxies**: Set `--trusted-proxies` when running behind Nginx, Caddy, or Cloudflare to prevent header spoofing.
 
-- Passwords go through PBKDF2-SHA256 at 200k iterations. Nothing is stored in plain
-  text.
-- Session tokens are 256 random bits and only hashes hit the disk, so a copied
-  `sessions.json` is useless.
-- Five failed logins per IP per five minutes, then a lockout doubling to 30 minutes.
-  It applies to the right password too.
-- The control panel, where the QR code and shutdown button live, listens on loopback
-  on its own port. It never reaches the network.
-
-Behind a reverse proxy, say which peers you trust or forwarded headers get ignored:
-
-```bash
-agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
-```
-
-> [!NOTE]
-> **Large file uploads via reverse proxies & CDNs**: While `agy-remote` streams uploads with no internal size cap, your front-facing proxy or CDN may enforce body size limits (e.g. Nginx defaults to 1 MB with `client_max_body_size`, and Cloudflare Free tiers cap at 100 MB). If large file uploads return `413 Request Entity Too Large`, increase your proxy's body size limit.
-
-Rest is in [SECURITY.md](SECURITY.md). Use Tailscale if you can and HTTPS if you
-can't.
-
-## Commands
-
-```
-agy-remote                     share the desktop app on your network
-agy-remote serve               run headless on a server
-agy-remote update [flags]      check and update Antigravity language_server to the latest official release
-agy-remote doctor              check everything, say what's wrong
-agy-remote config [flags]      write options to config.json
-agy-remote passwd [password]   set the password
-agy-remote sessions [revoke]   list or sign out devices
-```
-
-`agy-remote help` lists the flags. Each has an `AGY_*` environment variable.
-
-```
-  phone                          your machine or server
-┌──────────┐              ┌────────────────────────────────┐
-│ browser  │   password   │ agy-remote                     │
-│          │◄────────────►│   sessions, rate limiting      │
-│  Anti-   │    :8765     │   patch main.js / index.html   │
-│ gravity  │              │              │ https           │
-│   UI     │              │   language_server --standalone │
-└──────────┘              └──────────────┼─────────────────┘
-                                         ▼
-                                  Google CloudCode
-```
-
-Prompts and code go to the language server on the same host and nowhere else.
+---
 
 ## FAQ
 
-**Does the IDE or the CLI work?** No. It has to be the desktop app, the one called
-just "Antigravity", because only that runs `language_server --standalone`. The CLI
-has the bundle compiled in but no flag to serve it.
+**Does this require the Antigravity desktop GUI on Linux?**  
+No. `agy-server` runs the core `language_server` binary headlessly.
 
-**Will it survive updates?** Yes. Patches use an adaptive regular expression engine
-that automatically accommodates webpack symbol and minifier identifier changes across
-releases (e.g. 2.8.x, 2.9.x+). On headless servers (`serve` mode), `agy-remote` checks
-for and applies official upstream `language_server` updates safely and atomically once a day.
+**Will updates from Google break the patches?**  
+Patches use adaptive regular expressions that match structural AST patterns rather than exact variable names. Run `agy-server update` to pull official upstream releases safely.
 
-**Does my code leave the machine?** No. Proxy and language server both run locally.
+**Does my code pass through third-party servers?**  
+No. Traffic flows directly between your client browser and your server instance. The only external connection is `language_server` communicating with Google's API.
 
-**Two people?** Each device gets a session, but they share one Antigravity and one
-Google account. It's for your devices, not a team.
-
-## Building
-
-```bash
-go test ./...
-go run ./cmd/agy-remote
-```
-
-The interesting directory is [`internal/patches`](internal/patches). A patch is a
-declarative rewrite struct anchored on literal strings or adaptive regular expressions;
-add one to `All()` and the tests, `doctor`, the control panel and the cache key pick it up.
-
-Antigravity's bundle isn't in this repo, so `patches_test.go` tests the engine
-against synthetic fixtures and `live_test.go` checks the anchors against a real
-running language server, skipping if there isn't one. Before tagging a release,
-open the desktop app and run `go test ./internal/patches -run Live -v`.
+---
 
 ## License
 
-[Apache-2.0](LICENSE). Not a Google project. See [DISCLAIMER.md](DISCLAIMER.md).
+[Apache-2.0](LICENSE). Not affiliated with or endorsed by Google. See [DISCLAIMER.md](DISCLAIMER.md).

@@ -13,9 +13,21 @@ var (
 
 	skipOnboardingRe = regexp.MustCompile(`c\.hasOnboardingScreens&&[a-zA-Z0-9_$]+!==2&&[a-zA-Z0-9_$]+\(\{to:"/onboarding",replace:!0,throw:!0\}\)`)
 
-	mobileEnterNewlineRe         = regexp.MustCompile(`registerCommand\(([a-zA-Z0-9_$]+),k=>\{if\(!k\)return!1;k\.preventDefault\(\);`)
-	mobileProjectAddButtonRe     = regexp.MustCompile(`if\(d==="project"\|\|d==="environment"\|\|d==="status"\)\{let\s+([a-zA-Z0-9_$]+)=([a-zA-Z0-9_$]+)\?void 0:([a-zA-Z0-9_$]+)==="project"\?"New Conversation in Project":([a-zA-Z0-9_$]+)==="environment"\?"New Conversation in Workspace":[\r\n\s]*void 0`)
-	mobileProjectHeaderActionsRe = regexp.MustCompile(`className:Pm\("absolute right-1 top-0 flex h-full items-center gap-1",([a-zA-Z0-9_$]+)\|\|([a-zA-Z0-9_$]+)\?"opacity-100":"opacity-0 group-hover/header:opacity-100 group-focus-within/header:opacity-100"\)`)
+	mobileEnterNewlineRe           = regexp.MustCompile(`registerCommand\(([a-zA-Z0-9_$]+),k=>\{if\(!k\)return!1;k\.preventDefault\(\);`)
+	mobileProjectAddButtonRe       = regexp.MustCompile(`if\(d==="project"\|\|d==="environment"\|\|d==="status"\)\{let\s+([a-zA-Z0-9_$]+)=([a-zA-Z0-9_$]+)\?void 0:([a-zA-Z0-9_$]+)==="project"\?"New Conversation in Project":([a-zA-Z0-9_$]+)==="environment"\?"New Conversation in Workspace":[\r\n\s]*void 0`)
+	mobileProjectHeaderActionsRe   = regexp.MustCompile(`className:Pm\("absolute right-1 top-0 flex h-full items-center gap-1",([a-zA-Z0-9_$]+)\|\|([a-zA-Z0-9_$]+)\?"opacity-100":"opacity-0 group-hover/header:opacity-100 group-focus-within/header:opacity-100"\)`)
+	mobileUserMessageActionsRe     = regexp.MustCompile(`opacity-0 pointer-events-none group-hover/user-input-step:opacity-100 group-hover/user-input-step:pointer-events-auto transition-all bg-card user-input-buttons-shadow user-input-buttons-container`)
+	mobileConversationRowActionsRe = regexp.MustCompile(`className:Pm\("absolute top-0 bottom-0 -right-1 pl-6 flex items-center justify-end gap-0\.5 z-10",([a-zA-Z0-9_$]+)\?"hidden":([a-zA-Z0-9_$]+)\?"opacity-100":"opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100"\)`)
+	mobileConversationGradientRe   = regexp.MustCompile(`style:\{background:([a-zA-Z0-9_$]+)==="sidebar"\?` + "`" + `linear-gradient\(to right, transparent 0%, \$\{[a-zA-Z0-9_$]+\?"var\(--sidebar-secondary\)":[a-zA-Z0-9_$]+\?"color-mix\(in srgb, var\(--sidebar-secondary\) 50%, var\(--sidebar\)\)\":"var\(--sidebar\)"\} 25%\)` + "`" + `:"linear-gradient\(to right, transparent 0%, var\(--muted\) 25%\)"\}`)
+
+	mobileTitlebarDeleteHookRe  = regexp.MustCompile(`var\s+\{handleArchive:([a-zA-Z0-9_$]+),handleRestore:([a-zA-Z0-9_$]+),handlePin:([a-zA-Z0-9_$]+),handleUnpin:([a-zA-Z0-9_$]+),[\r\n\s]*isArchiveSupported:([a-zA-Z0-9_$]+),handleShare:([a-zA-Z0-9_$]+),showShareModal:([a-zA-Z0-9_$]+),shareUrl:([a-zA-Z0-9_$]+),handleCloseShareModal:([a-zA-Z0-9_$]+),onShare:([a-zA-Z0-9_$]+)\}=([a-zA-Z0-9_$]+)\(([a-zA-Z0-9_$]+)\?\?""\)`)
+	mobileTitlebarDeleteMenuRe  = regexp.MustCompile(`r\&\&\(L\.push\(\{iconName:"edit",tooltip:"Rename",onClick:([a-zA-Z0-9_$]+)\}\)`)
+	mobileTitlebarDeleteModalRe = regexp.MustCompile(`(c=Zkb\(\{cascadeId:([a-zA-Z0-9_$]+),paneId:([a-zA-Z0-9_$]+),includeRemoveFromSplit:!1\}\);return\s+([a-zA-Z0-9_$]+)\.length>0\|\|([a-zA-Z0-9_$]+)\.length>0\|\|([a-zA-Z0-9_$]+)\.length>0\|\|([a-zA-Z0-9_$]+)\.length>0\?([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+)\.Fragment,null,)`)
+
+	mobileKebabMenuPinArchiveRe    = regexp.MustCompile(`const dlb=\(\{cascadeId:([a-zA-Z0-9_$]+),onDeleteClick:([a-zA-Z0-9_$]+),onRenameClick:([a-zA-Z0-9_$]+),onMarkAsReadClick:([a-zA-Z0-9_$]+),isUnread:([a-zA-Z0-9_$]+),onViewDebugClick:([a-zA-Z0-9_$]+)\}\)=>([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{side:"bottom",align:"start",className:"min-w-\[180px\]",finalFocus:!1\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{onClick:([a-zA-Z0-9_$]+),"data-testid":"conversation-rename-menu-item"\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{name:"edit",size:16,className:"text-secondary-foreground shrink-0"\}\),([a-zA-Z0-9_$]+)\.createElement\("span",null,"Rename"\)\),`)
+	mobileKebabWrapperPinArchiveRe = regexp.MustCompile(`var elb=\(\{cascadeId:([a-zA-Z0-9_$]+),onDeleteClick:([a-zA-Z0-9_$]+),onRenameClick:([a-zA-Z0-9_$]+),onMarkAsReadClick:([a-zA-Z0-9_$]+),isUnread:([a-zA-Z0-9_$]+),onOpenChange:([a-zA-Z0-9_$]+),onViewDebugClick:([a-zA-Z0-9_$]+)\}\)=>([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{onOpenChange:([a-zA-Z0-9_$]+)\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{asChild:!0\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{variant:"ghost",size:"icon","aria-label":"More options","data-testid":"conversation-kebab",onClick:([a-zA-Z0-9_$]+)=>void ([a-zA-Z0-9_$]+)\.stopPropagation\(\)\},([a-zA-Z0-9_$]+)\.createElement\(([a-zA-Z0-9_$]+),\{name:"more_vert",size:16\}\)\)\),([a-zA-Z0-9_$]+)\.createElement\(dlb,\{cascadeId:([a-zA-Z0-9_$]+),onDeleteClick:([a-zA-Z0-9_$]+),onRenameClick:([a-zA-Z0-9_$]+),onMarkAsReadClick:([a-zA-Z0-9_$]+),isUnread:([a-zA-Z0-9_$]+),onViewDebugClick:([a-zA-Z0-9_$]+)\}\)\);`)
+	mobileKebabCallPinArchiveRe    = regexp.MustCompile(`G\.createElement\(elb,\{cascadeId:([a-zA-Z0-9_$]+),onDeleteClick:\(\)=>\{([a-zA-Z0-9_$]+)\(!0\)\},onRenameClick:([a-zA-Z0-9_$]+),onMarkAsReadClick:([a-zA-Z0-9_$]+)\?([a-zA-Z0-9_$]+):([a-zA-Z0-9_$]+),isUnread:([a-zA-Z0-9_$]+),onOpenChange:([a-zA-Z0-9_$]+)\}\)`)
+	mobileHideAuxSidebarRe         = regexp.MustCompile(`G\.createElement\(bZ,\{iconName:"dock_to_bottom",onClick:[a-zA-Z0-9_$]+,"aria-label":"Toggle Auxiliary Pane",dataTestId:"mobile-toggle-aux-sidebar"\}\)`)
 
 	hideMicButtonRe = regexp.MustCompile(`([a-zA-Z0-9_$]+\.displayName="GutterHoverCommentButton";var )([a-zA-Z0-9_$]+)=\(`)
 
@@ -195,6 +207,96 @@ func All() []Patch {
 			Enabled: mobile,
 			FindRe:  mobileProjectHeaderActionsRe,
 			Replace: `className:Pm("absolute right-1 top-0 flex h-full items-center gap-1","opacity-100")`,
+		},
+		{
+			ID:      "mobile-user-message-actions",
+			Desc:    "Make user message action buttons (Undo icon and copy) visible on touch devices",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileUserMessageActionsRe,
+			Replace: `opacity-100 pointer-events-auto transition-all bg-card user-input-buttons-shadow user-input-buttons-container`,
+		},
+		{
+			ID:      "mobile-conversation-row-actions",
+			Desc:    "Enable conversation row action buttons (Delete, Rename, Pin) on mobile",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileConversationRowActionsRe,
+			Replace: `className:Pm("absolute top-0 bottom-0 -right-1 pl-6 flex items-center justify-end gap-0.5 z-10",$1||$2?"opacity-100":"opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100")`,
+		},
+		{
+			ID:      "mobile-conversation-gradient-remove",
+			Desc:    "Remove opaque gradient background behind conversation action buttons",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileConversationGradientRe,
+			Replace: `style:{background:"transparent"}`,
+		},
+		{
+			ID:      "mobile-titlebar-delete-hook",
+			Desc:    "Expose conversation deletion handlers in the titlebar more-actions menu",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileTitlebarDeleteHookRe,
+			Replace: `var {handleArchive:$1,handleRestore:$2,handlePin:$3,handleUnpin:$4,isArchiveSupported:$5,handleDelete:agyDel,showDeleteModal:agyShowDel,setShowDeleteModal:agySetShowDel,showLoadingSpinner:agyDelSpin,handleCloseDeleteModal:agyCloseDel,handleShare:$6,showShareModal:$7,shareUrl:$8,handleCloseShareModal:$9,onShare:$10}=$11($12??"")`,
+		},
+		{
+			ID:      "mobile-titlebar-delete-menu",
+			Desc:    "Add Delete option to the titlebar more-actions dropdown menu",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileTitlebarDeleteMenuRe,
+			Replace: `r&&(L.push({iconName:"edit",tooltip:"Rename",onClick:$1}),L.push({iconName:"delete",tooltip:"Delete",onClick:()=>{agySetShowDel(!0)}})`,
+		},
+		{
+			ID:      "mobile-titlebar-delete-modal",
+			Desc:    "Render conversation delete confirmation modal in titlebar component",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileTitlebarDeleteModalRe,
+			Replace: `$1$9.createElement(hlb,{isOpen:agyShowDel,onClose:agyCloseDel,onDelete:agyDel,showLoadingSpinner:agyDelSpin}),`,
+		},
+		{
+			ID:      "mobile-kebab-menu-pin-archive",
+			Desc:    "Add Pin and Archive actions into conversation kebab dropdown menu",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileKebabMenuPinArchiveRe,
+			Replace: `const dlb=({cascadeId:$1,onDeleteClick:$2,onRenameClick:$3,onMarkAsReadClick:$4,isUnread:$5,onViewDebugClick:$6,onPinClick:agyPin,isPinned:agyIsPinned,onArchiveClick:agyArchive})=>$7.createElement($8,{side:"bottom",align:"start",className:"min-w-[180px]",finalFocus:!1},$9.createElement($10,{onClick:$11,"data-testid":"conversation-rename-menu-item"},$12.createElement($13,{name:"edit",size:16,className:"text-secondary-foreground shrink-0"}),$14.createElement("span",null,"Rename")),agyPin&&$7.createElement($10,{onClick:agyPin,"data-testid":"conversation-pin-menu-item"},$12.createElement($13,{name:agyIsPinned?"keep_off":"keep",size:16,className:"text-secondary-foreground shrink-0"}),$14.createElement("span",null,agyIsPinned?"Unpin":"Pin")),agyArchive&&$7.createElement($10,{onClick:agyArchive,"data-testid":"conversation-archive-menu-item"},$12.createElement($13,{name:"archive",size:16,className:"text-secondary-foreground shrink-0"}),$14.createElement("span",null,"Archive")),`,
+		},
+		{
+			ID:      "mobile-kebab-wrapper-pin-archive",
+			Desc:    "Pass pin and archive props through conversation kebab wrapper component",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileKebabWrapperPinArchiveRe,
+			Replace: `var elb=({cascadeId:$1,onDeleteClick:$2,onRenameClick:$3,onMarkAsReadClick:$4,isUnread:$5,onOpenChange:$6,onViewDebugClick:$7,onPinClick:agyPin,isPinned:agyIsPinned,onArchiveClick:agyArchive})=>$8.createElement($9,{onOpenChange:$10},$11.createElement($12,{asChild:!0},$13.createElement($14,{variant:"ghost",size:"icon","aria-label":"More options","data-testid":"conversation-kebab",onClick:$15=>void $16.stopPropagation()},$17.createElement($18,{name:"more_vert",size:16}))),$19.createElement(dlb,{cascadeId:$20,onDeleteClick:$21,onRenameClick:$22,onMarkAsReadClick:$23,isUnread:$24,onViewDebugClick:$25,onPinClick:agyPin,isPinned:agyIsPinned,onArchiveClick:agyArchive}));`,
+		},
+		{
+			ID:      "mobile-kebab-call-pin-archive",
+			Desc:    "Supply pin and archive handlers to conversation kebab button call in history list",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileKebabCallPinArchiveRe,
+			Replace: `G.createElement(elb,{cascadeId:$1,onDeleteClick:()=>{$2(!0)},onRenameClick:$3,onMarkAsReadClick:$4?$5:$6,isUnread:$7,onOpenChange:$8,onPinClick:ea,isPinned:Ea,onArchiveClick:ra})`,
+		},
+		{
+			ID:      "mobile-hide-aux-sidebar",
+			Desc:    "Hide unclickable auxiliary sidebar toggle icon on mobile navigation bar",
+			Target:  MainJS,
+			Kind:    Regexp,
+			Enabled: mobile,
+			FindRe:  mobileHideAuxSidebarRe,
+			Replace: `null`,
 		},
 
 		// Always start the folder picker at the configured workspace root instead of
@@ -385,6 +487,27 @@ body {
   body.agy-kb-open .shrink-0.p-2,
   html[style*="--agy-bottom"] .shrink-0.p-2 {
     padding-bottom: 0px !important;
+  }
+  /* Make user message action buttons (Undo, Copy) easily visible on touch screens */
+  @media (pointer: coarse) {
+    .user-input-buttons-container {
+      opacity: 0.9 !important;
+      pointer-events: auto !important;
+    }
+    /* Clean mobile conversation row: align kebab menu and timestamp side by side without overlapping */
+    div[data-testid^="conversation-row-"] div.absolute.top-0 {
+      position: relative !important;
+      top: auto !important;
+      bottom: auto !important;
+      right: auto !important;
+      padding-left: 0 !important;
+    }
+    div[data-testid^="conversation-row-"] [data-testid="conversation-pin-button"],
+    div[data-testid^="conversation-row-"] [data-testid="conversation-archive-button"],
+    div[data-testid^="conversation-row-"] [data-testid="conversation-restore-button"],
+    div[data-testid^="conversation-row-"] [data-testid="conversation-delete-button"] {
+      display: none !important;
+    }
   }
   .aux-drawer-popup {
     padding-bottom: var(--agy-bottom, env(safe-area-inset-bottom, 0px)) !important;
