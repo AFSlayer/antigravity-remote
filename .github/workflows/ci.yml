@@ -19,6 +19,10 @@ jobs:
           go-version: "1.24"
           cache: true
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - run: go vet ./...
 
       - run: go test -race ./...
@@ -31,6 +35,57 @@ jobs:
             echo "$unformatted"
             exit 1
           fi
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Playwright
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Build agy-server binary
+        run: go build -o bin/agy-server ./cmd/agy-server
+
+      - name: Install official Antigravity language server
+        run: |
+          ./bin/agy-server update --yes || bash scripts/install.sh --yes
+
+      - name: Run automated Playwright smoke suite
+        run: |
+          # 1. Verify bundle JS syntax against V8 engine
+          go test -v ./internal/patches -run TestAnchorsMatchLiveBundle
+          
+          # 2. Start local isolated agy-server in background
+          mkdir -p /tmp/agy-ci-workspace
+          AGY_PASSWORD="12341234" ./bin/agy-server serve --port 8765 --workspace-root /tmp/agy-ci-workspace &
+          SERVER_PID=$!
+          
+          # 3. Wait for local server to respond
+          for i in $(seq 1 15); do
+            if curl -s http://127.0.0.1:8765/__agy/login > /dev/null 2>&1; then
+              echo "Local agy-server is ready on port 8765"
+              break
+            fi
+            sleep 1
+          done
+
+          # 4. Execute comprehensive 5-domain smoke test
+          TEST_TARGET_URL="http://127.0.0.1:8765" TEST_PASSWORD="12341234" node scripts/smoke-test.cjs
+          
+          # 5. Clean up server process
+          kill $SERVER_PID || true
 
   build:
     runs-on: ubuntu-latest
