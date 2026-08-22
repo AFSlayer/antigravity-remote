@@ -130,6 +130,14 @@ Antigravity Server는 PWA(Progressive Web App) 규격을 완벽 지원합니다.
 
 ---
 
+### 📝 웹 UI 내 글로벌 & 워크스페이스 룰 편집기
+서버 터미널에 직접 접속하지 않고도 웹 브라우저에서 에이전트 지침(`~/.gemini/GEMINI.md`)과 프로젝트 룰을 수정할 수 있습니다:
+- **Settings → Customizations → Rules** 메뉴로 이동합니다.
+- `user_global` 또는 프로젝트 룰 항목 우측의 **Edit** 버튼을 클릭하여 인라인 에디터를 엽니다.
+- 내용 수정 후 **Save Rule 💾**을 클릭하면 호스트 파일시스템에 원자적으로 저장되어 즉시 반영됩니다.
+
+---
+
 ## 프로덕션 리버스 프록시 연동 (Caddy / Nginx)
 
 에이전트의 실시간 스트리밍 응답(SSE) 및 WebSocket 통신, 대용량 파일 업로드를 위해 프록시의 **버퍼링 비활성화**와 **WebSocket 업그레이드** 설정이 필요합니다:

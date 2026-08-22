@@ -22,6 +22,7 @@ import (
 	"github.com/AFSlayer/antigravity-server/internal/netinfo"
 	"github.com/AFSlayer/antigravity-server/internal/patches"
 	"github.com/AFSlayer/antigravity-server/internal/proxy"
+	"github.com/AFSlayer/antigravity-server/internal/rules"
 	"github.com/AFSlayer/antigravity-server/internal/signin"
 	"github.com/AFSlayer/antigravity-server/internal/ui"
 	"github.com/AFSlayer/antigravity-server/internal/updater"
@@ -158,6 +159,11 @@ func (r *runner) start() error {
 	})
 	uploader.Register(publicMux)
 	uploader.StartCleaner(uploaderCtx, time.Hour)
+
+	rulesMgr := rules.New(rules.Options{
+		WorkspaceRoot: r.cfg.WorkspaceRoot,
+	})
+	rulesMgr.Register(publicMux)
 
 	if r.mode == modeServe {
 		updater.StartAutoUpdater(uploaderCtx, r.cfg, nil)
