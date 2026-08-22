@@ -231,7 +231,11 @@ func Apply(target Target, body []byte, opts Options) ([]byte, Report) {
 // aggressively, yet re-fetch it the moment the patches or version change.
 func CacheKey(version string, opts Options) string {
 	h := sha256.New()
-	h.Write([]byte(version))
+	if version != "" {
+		h.Write([]byte(version))
+	} else {
+		h.Write([]byte("v0.2.0"))
+	}
 	h.Write([]byte{0})
 	h.Write([]byte(opts.WorkspaceRoot))
 	h.Write([]byte{0})
