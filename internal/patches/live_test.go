@@ -2,6 +2,8 @@ package patches
 
 import (
 	"bytes"
+	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/AFSlayer/antigravity-server/internal/lsproc"
@@ -51,9 +53,18 @@ func TestAnchorsMatchLiveBundle(t *testing.T) {
 		body   []byte
 		target Target
 	}{{mainJS, MainJS}, {indexHTML, HTML}} {
-		if _, report := Apply(target.target, target.body, opts); len(report.Missing()) > 0 {
+		patched, report := Apply(target.target, target.body, opts)
+		if len(report.Missing()) > 0 {
 			for _, r := range report.Missing() {
 				t.Errorf("%s did not apply to the live %s", r.ID, target.target)
+			}
+		}
+		if target.target == MainJS {
+			tmp := "/tmp/debug_patched_bundle.js"
+			_ = os.WriteFile(tmp, patched, 0644)
+			cmd := exec.Command("node", "--check", tmp)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Errorf("JavaScript Syntax Error in patched bundle: %v\nOutput: %s", err, string(out))
 			}
 		}
 	}
