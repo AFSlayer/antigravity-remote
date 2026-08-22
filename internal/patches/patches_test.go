@@ -58,8 +58,9 @@ var regexpFixtures = map[string]string{
 	"mobile-kebab-menu-pin-archive":             `const dlb=({cascadeId:a,onDeleteClick:b,onRenameClick:c,onMarkAsReadClick:d,isUnread:f,onViewDebugClick:g})=>G.createElement(HL,{side:"bottom",align:"start",className:"min-w-[180px]",finalFocus:!1},G.createElement(IL,{onClick:c,"data-testid":"conversation-rename-menu-item"},G.createElement(U,{name:"edit",size:16,className:"text-secondary-foreground shrink-0"}),G.createElement("span",null,"Rename")),`,
 	"mobile-kebab-wrapper-pin-archive":          `var elb=({cascadeId:a,onDeleteClick:b,onRenameClick:c,onMarkAsReadClick:d,isUnread:f,onOpenChange:g,onViewDebugClick:h})=>G.createElement(FL,{onOpenChange:g},G.createElement(GL,{asChild:!0},G.createElement(Ky,{variant:"ghost",size:"icon","aria-label":"More options","data-testid":"conversation-kebab",onClick:k=>void k.stopPropagation()},G.createElement(U,{name:"more_vert",size:16}))),G.createElement(dlb,{cascadeId:a,onDeleteClick:b,onRenameClick:c,onMarkAsReadClick:d,isUnread:f,onViewDebugClick:h}));`,
 	"mobile-kebab-call-pin-archive":             `G.createElement(elb,{cascadeId:a,onDeleteClick:()=>{sa(!0)},onRenameClick:hb,onMarkAsReadClick:vb?ja:pa,isUnread:vb,onOpenChange:Ca})`,
-	"mobile-hide-aux-sidebar":                    `G.createElement(bZ,{iconName:"dock_to_bottom",onClick:m,"aria-label":"Toggle Auxiliary Pane",dataTestId:"mobile-toggle-aux-sidebar"})`,
-	"folder-picker-initial-path":                `initialPath:b?b.fsPath:Sf?"C:/":"/",fetchDirectoryContents:`,
+	"mobile-hide-aux-sidebar":                   `G.createElement(bZ,{iconName:"dock_to_bottom",onClick:m,"aria-label":"Toggle Auxiliary Pane",dataTestId:"mobile-toggle-aux-sidebar"})`,
+	"settings-rules-editor":                     `var WS=({name:a,path:b,onCopyPath:c,description:d,badge:f,disabled:g=!1,isLast:h=!1,onEdit:k,editTitle:l="Edit",onDelete:m,deleteTitle:n="Delete",onToggle:p,toggleChecked:r,toggleDisabled:t=!1,expandableContent:v})=>{var w=k||m||p,`,
+	"folder-picker-initial-path":                `initialPath:b?b.fsPath:g?"C:/":"/",fetchDirectoryContents:`,
 	"composer-upload-menu-item":                 `{icon:ea=>x.createElement(T,{name:"image",size:ea.width?Number(ea.width):14,className:ea.className}),` + "\n" + `label:"Media",onClick:oa}`,
 	"file-upload-accept-all":                    `accept:".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif,video/webm,.mp4,video/mp4,.pdf,application/pdf,.txt,text/plain,.csv,text/csv,.json,application/json,.md,text/markdown,.py,text/x-python,.js,.mjs,text/javascript,.ts,.tsx,text/x-typescript,.html,.htm,text/html,.css,text/css",multiple:!0`,
 	"file-upload-input-reset":                   `var IRa=({onFilesSelected:a})=>{var b=(0,x.useRef)(null),c=(0,x.useCallback)(e=>{e=e.target;e.files&&a(e.files)},[a]);return{openFileDialog:(0,x.useCallback)(()=>{b.current?.click()},[]),fileInputRef:b,handleFileChange:c}};`,
@@ -139,6 +140,8 @@ func TestPatchedContentIsCorrect(t *testing.T) {
 		`data-testid":"conversation-pin-menu-item"`,
 		`data-testid":"conversation-archive-menu-item"`,
 		`onPinClick:ea,isPinned:Ea,onArchiveClick:ra`,
+		`Save Rule 💾`,
+		`/__agy/api/rules/save`,
 	}
 	for _, w := range want {
 		if !strings.Contains(body, w) {

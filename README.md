@@ -130,6 +130,14 @@ On headless Linux servers, `agy-server` includes a background auto-updater servi
 
 ---
 
+### 📝 In-App Global & Workspace Rules Editor
+Manage your agent instructions (`~/.gemini/GEMINI.md`) directly within the web UI:
+- Open **Settings → Customizations → Rules**.
+- Click the native **Edit** button next to `user_global` or any workspace rule to expand an inline code editor.
+- Updates are saved atomically to the host filesystem with instant effect.
+
+---
+
 ## Production & Reverse Proxy Setup
 
 Antigravity uses Server-Sent Events (SSE), WebSocket connections, and chunked streaming. If running behind a custom reverse proxy, disable proxy buffering and configure WebSocket upgrades:
