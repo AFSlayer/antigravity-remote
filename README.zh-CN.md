@@ -1,146 +1,208 @@
 <div align="center">
 
-# Antigravity Remote
+# Antigravity Server
 
-**在手机上使用 Antigravity 桌面版。**
+适用于 Google Antigravity 的自托管服务端与 Web 界面桥接工具。  
+在无头 Linux 实例或本地电脑上 24/7 全天候运行 Antigravity，并通过任意网页浏览器直接访问。
 
 [![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-server/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-server/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
-<img src="docs/assets/demo.gif" width="300" alt="在手机上让 agent 查看服务器状态" />
+<img src="docs/assets/demo.gif" width="320" alt="在移动端浏览器运行的 Antigravity Server" />
 
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · [Português](README.pt-BR.md) · [Español](README.es.md)
 
 </div>
 
-## 是什么
+---
 
-Antigravity 桌面版里带了一个 `language_server`。跟 Google 通信的是它，加上
-`--standalone` 之后它还会把整个 Antigravity 界面当成 web 应用提供出来。它只监听
-`127.0.0.1`。
+## 为什么选择 Antigravity Server？（对比官方远程桥接）
 
-`agy-remote` 在它前面加一道密码，转发到你的网络。顺便改写经过的 JS bundle 里的几个
-字符串，因为桌面 IDE 直接放到手机浏览器里有些地方不好用。
+Google 提供了官方远程桥接（`antigravity.google.com/r/...`），但必须通过其云端中继，且需要桌面 GUI 应用程序始终保持运行。
 
-做同类事情的项目都是自己做界面，或者用 CDP 镜像屏幕。这个直接提供 Antigravity 自己的
-界面，所以终端、文件树、artifacts、browser agent 都能用，Google 出新功能也会自己出现。
+`agy-server` 可在 Linux 云服务器或本地服务器上以无头模式运行，提供直接网络连接和移动端专属补丁：
 
-代价是给压缩后的 bundle 打补丁很脆弱。Antigravity 一更新补丁可能就失效。`agy-remote`
-每次启动都检查一遍，哪个不匹配会告诉你。
+| 功能 | Google 官方远程桥接 | Antigravity Server (`agy-server`) |
+| :--- | :--- | :--- |
+| **托管环境** | 必须始终运行桌面 GUI 应用程序 | **无头 Linux VPS / 云服务器**（systemd 服务、自动更新） |
+| **连接与延迟** | 经由 Google 云端中继转发 | **直连访问**（局域网、VPN 或 HTTPS 反向代理） |
+| **移动端项目管理** | 缺少项目 `(+)` 按钮；切换繁琐 | 在项目列表顶部**恢复 `(+)` 新建对话按钮** |
+| **对话管理控制** | 移动端无法删除、置顶或归档对话 | **触控对话控制**：支持删除、重命名、置顶和归档 |
+| **消息操作** | 仅支持鼠标悬停；移动端无法撤销/复制 | 在消息气泡上**常显撤销（`↶`）与复制（`📋`）按钮** |
+| **iOS / PWA 键盘贴合** | 底部 Safe Area 留白且输入法弹出时视口抖动 | **0px 紧贴键盘**：动态消除安全区留白与视口跟踪 |
+| **文件上传** | 1MB RPC 文本大小限制 | **分块流式上传器**：直接传输大体积日志、HAR 和数据集 |
+| **认证与隐私** | 必须使用 Google 账号并经过云中继 | 密码保护（PBKDF2）、会话管理与防暴力破解 |
 
-## 安装
+---
 
-```bash
-# macOS、Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
-```
+## 快速开始
 
-```powershell
-# Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
-```
+### 方案 1：Linux 服务器 / 云 VPS（推荐）
 
-装完就启动。控制面板会打开并显示二维码，手机扫一下就进去了，不用输密码。二维码里是一个
-十分钟有效的一次性 token。
-
-<div align="center">
-<img src="docs/assets/control-panel.png" width="320" alt="控制面板" />
-</div>
-
-不用事先打开 Antigravity。没运行的话 `agy-remote` 会启动它、打开远程控制、等 language
-server 就绪，再找出哪个端口在提供界面。
-
-手机上用分享 →“添加到主屏幕”，主屏幕上会出现 Antigravity 图标。
-
-二进制文件没有代码签名，所以用浏览器下载压缩包会被系统隔离。macOS 右键 **打开** 再
-**打开**；Windows 点 **更多信息** → **仍要运行**。上面的安装命令用 `curl`，不会被打上
-隔离标记。
-
-## 部署到服务器
-
-放到 Linux 机器上，合上笔记本 Antigravity 也照样跑。便宜的 VPS 或免费档的 ARM 实例就够。
+在无头 Linux 实例（Oracle Cloud 免费层、AWS、DigitalOcean 或家庭服务器）上运行：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
-它会问域名和工作目录，从 Google 的 `storage.googleapis.com` 下载官方构建包，只取出
-165MB 的 `language_server`。本仓库不二次分发任何 Google 的二进制文件。然后写 systemd
-unit、配好 Caddy 的 HTTPS、生成密码。
+安装脚本执行过程：
+1. 提示输入您的域名（如 `agy.example.com`）和工作区路径。
+2. 直接从 Google 官方构建存储桶（`storage.googleapis.com`）下载 `language_server` 二进制文件（不重新分发 Google 专有文件）。
+3. 配置 Caddy 自动申请 HTTPS 证书、注册 systemd 服务并设置访问密码。
 
-因为是同一套 web 界面，用电脑浏览器打开也一样，外观和操作跟桌面版没区别。对话、工作区、
-正在跑的 agent 都在服务器上，所以在地铁上用手机开始的活儿，到公司用台式机可以接着做。
-只有一个实例，所以根本不存在同步这回事。
+#### Google 账号认证
+首次访问服务器时：
+- **Web 界面直接登录**：在浏览器中打开 Web UI，进入**设置（Settings）**菜单直接完成 Google 登录。
+- **复制现有 Token（可选）**：如果已在本地电脑登录过，可直接复制 Token 跳过认证：
+  ```bash
+  scp ~/.gemini/jetski-standalone-oauth-token user@your-server:~/.gemini/
+  ```
 
-有一步没法自动化。Antigravity 登录走 `localhost` 上的 OAuth 回调，远端服务器收不到。要从
-一台已经在用桌面版的机器上把 token 拷过去：
+---
 
-```bash
-scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
-```
+### 方案 2：桌面伴侣模式（macOS、Windows、Linux 桌面）
 
-token 缺失时 `agy-remote` 会把这条命令打出来。
-
-## 打了哪些补丁
-
-25 个补丁，每个都在 [`internal/patches/registry.go`](internal/patches/registry.go) 中说明。使用 `agy-remote doctor` 查看应用情况。
-
-| 问题 | 补丁 |
-| --- | --- |
-| 前端包请求 `https://127.0.0.1:<port>`，在手机上就是手机自己 | 使用浏览器的 origin |
-| 输入文字时回车就发送了 | 触屏上回车换行，Cmd/Ctrl+回车发送 |
-| 点模型直接选了 medium 并关闭菜单 | 点击打开 effort（思考深度）子菜单 |
-| 第一次回复后弹出 "Enable Notifications" | 触屏设备上跳过 |
-| standalone 无法听写，但有麦克风按钮 | 隐藏 |
-| 移动端标题栏中失效的用户头像占位图标 | 隐藏 |
-| 移动端点击 `+` 停留在会话列表仅聚焦输入框 | 直接进入全新对话界面并集成返回按钮 |
-| 新项目从 `/` 目录开始 | 从你设置的工作区目录开始 |
-| 大文件（.har、日志等）导致浏览器卡死或 20MB 限制错误 | 直接异步流式上传到工作区并提供原生进度 UI |
-| 不支持的文件扩展名（.har、.jsonl 等）被拒绝 | 允许所有文件类型并解析文本/数据载荷 |
-| 没图标，300 毫秒点击延迟 | Antigravity 图标，即时响应 |
-| iOS 底部横条遮挡及虚拟键盘顶起视图问题 | Safe Area 边距适配与视口高度同步 |
-| 远程浏览器无法登录 Google 账号 | 将设置中的登录按钮重定向至 Web 认证流程 |
-
-想看原样界面用 `agy-remote --no-mobile-patches`。
-
-## 安全
-
-能进来的人可以读你的文件、执行命令，这更接近给出 shell 权限。
-
-- 密码用 PBKDF2-SHA256 迭代 20 万次，明文不落盘。
-- 会话 token 是 256 位随机数，磁盘上只有哈希，拷走 `sessions.json` 也没用。
-- 每个 IP 五分钟五次失败，之后锁定时间翻倍到 30 分钟，正确密码同样被拦。
-- 带二维码和关闭按钮的控制面板只在单独端口监听 loopback，不对外。
-
-放在反向代理后面要指定可信来源，否则 forwarded 头会被忽略：
+将本地电脑上运行的 Antigravity 共享给同一局域网下的手机：
 
 ```bash
-agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
+# macOS & Linux
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
-> [!NOTE]
-> **反向代理与 CDN 大文件上传大小限制**：`agy-remote` 本身采用流式传输，没有内部文件大小上限。但在前置反向代理或 CDN 时（例如 Nginx 的 `client_max_body_size` 默认 1MB，Cloudflare 免费版限制 100MB），大文件可能被拦截并报错 `413 Request Entity Too Large`。遇到该问题请增大前端代理的请求体大小限制。
-
-其余见 [SECURITY.md](SECURITY.md)。能用 Tailscale 就用，不能就上 HTTPS。
-
-## 命令
-
-```
-agy-remote                     在局域网共享桌面版
-agy-remote serve               在服务器无头运行
-agy-remote update [flags]      将 Antigravity language_server 更新到官方最新版本
-agy-remote doctor              检查所有项，报错
-agy-remote config [flags]      写入 options 到 config.json
-agy-remote passwd [password]   设置密码
-agy-remote sessions [revoke]   查看或登出设备
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
-参数用 `agy-remote help` 看，每个都有对应的 `AGY_*` 环境变量。
+`agy-server` 将打开包含二维码的本地控制面板。使用同一 Wi-Fi 下的手机扫描二维码即可免密直连。
 
-## 其他
+<div align="center">
+<img src="docs/assets/control-panel.png" width="320" alt="Control Panel" />
+</div>
 
-只能用名字就叫 “Antigravity” 的桌面版，IDE 和 CLI 都不行，因为只有它能跑
-`language_server --standalone`。你的代码不会离开本机：代理和 language server 都在同一台
-机器上。开发说明、常见问题和完整的安全文档在 [英文 README](README.md) 里。
+---
 
-[Apache-2.0](LICENSE)。这不是 Google 的项目。请看 [DISCLAIMER.md](DISCLAIMER.md)。
+## 移动端 PWA 设置（添加到主屏幕）
+
+Antigravity Server 支持渐进式 Web 应用（PWA）标准。将其添加到移动设备主屏幕，即可在**无地址栏和底部工具栏的全屏独立模式**下运行：
+
+- **iOS (Safari)**：点击底部的**分享按钮（`⎋`）** → 选择**添加到主屏幕（Add to Home Screen）**。
+- **Android (Chrome)**：点击右上角**菜单（`⋮`）** → 选择**安装应用**或**添加到主屏幕**。
+
+> [!TIP]
+> 从主屏幕图标启动可确保虚拟键盘弹出时界面不抖动，并完美激活 **0px 键盘紧贴补丁**。
+
+---
+
+## 核心特性
+
+### ⚡ 移动端专属 UX 补丁
+- **触控便捷操作**：在消息气泡上常驻显示撤销（`↶`）和复制（`📋`）按钮。
+- **完整的对话管理**：通过顶栏菜单删除对话，在列表菜单中一键置顶或归档。
+- **精确虚拟键盘跟踪**：输入法激活时自动将 Safe Area 间距压缩至 0px。
+
+---
+
+### 📁 分块流式大文件上传
+解除官方 Antigravity 的 1MB RPC 限制，将大体积日志或数据集直接流式上传至工作区：
+
+<div align="center">
+<img src="docs/assets/upload.gif" width="560" alt="分块流式文件上传器演示" />
+</div>
+
+---
+
+### 🖥️ 桌面与平板电脑 Web 界面
+除了移动端外，在笔记本或台式电脑的现代浏览器中同样拥有出色体验：
+
+<div align="center">
+<img src="docs/assets/desktop.png" width="700" alt="在桌面浏览器运行的 Antigravity Web UI" />
+</div>
+
+---
+
+### 🔄 零停机无缝自动更新（Auto-Updater）
+在无头 Linux 服务器上，`agy-server` 内置后台自动更新服务：
+- 每日检查 Google 官方发布存储桶中的最新 `language_server` 版本。
+- 以零停机的原子方式安全替换核心二进制文件。
+- 手动检查与更新：运行 `agy-server update`。
+
+---
+
+## 生产环境反向代理配置（Caddy / Nginx）
+
+为了支持智能体的实时流式输出（SSE）、WebSocket 通信及大文件上传，反向代理需**禁用缓冲**并配置 **WebSocket 升级**：
+
+### Caddy
+```caddyfile
+agy.example.com {
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:8765 {
+        flush_interval -1
+    }
+}
+```
+
+### Nginx
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name agy.example.com;
+
+    # 允许大体积流式上传
+    client_max_body_size 0;
+
+    location / {
+        proxy_pass http://127.0.0.1:8765;
+        proxy_http_version 1.1;
+
+        # WebSocket 支持
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # 禁用缓冲以实现实时流式输出（必须）
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400s;
+
+        # 传递真实客户端 IP
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+> [!IMPORTANT]
+> 在反向代理后运行时，请配置 `--trusted-proxies 127.0.0.1/32`（或设置环境变量 `AGY_TRUSTED_PROXIES=127.0.0.1/32`），以确保防暴力破解系统能准确获取真实访客 IP。
+
+---
+
+## 工作原理
+
+Antigravity 内部包含名为 `language_server` 的独立二进制程序。使用 `--standalone` 运行时，它在本地 `127.0.0.1` 提供 Web 界面。
+
+`agy-server` 作为其前端反向代理，负责身份认证、动态运行时补丁注入及流式文件上传。
+
+---
+
+## CLI 命令
+
+```
+agy-server                      以桌面伴侣模式启动（局域网）
+agy-server serve                作为无头服务器守护进程运行
+agy-server update               检查并升级 Google 官方 language_server
+agy-server doctor               诊断补丁完整性与系统状态
+agy-server passwd [password]    设置或更改 Web 访问密码
+agy-server sessions [revoke]    查看活跃会话或注销所有设备
+agy-server config [flags]       管理 config.json 配置项
+```
+
+---
+
+## 许可证
+
+[Apache-2.0](LICENSE)。与 Google 无隶属或背书关系。详见 [DISCLAIMER.md](DISCLAIMER.md)。

@@ -1,160 +1,230 @@
 <div align="center">
 
-# Antigravity Remote
+# Antigravity Server
 
-**Antigravity デスクトップ版をスマホから使う。**
+Google AntigravityのためのセルフホストサーバーおよびWebインターフェースブリッジ。  
+ヘッドレスLinuxインスタンスまたはローカルデスクトップで24時間365日常時稼働し、Webブラウザから直接アクセスします。
 
 [![release](https://img.shields.io/github/v/release/AFSlayer/antigravity-server?style=flat-square&color=4f7cff)](https://github.com/AFSlayer/antigravity-server/releases/latest)
+[![ci](https://img.shields.io/github/actions/workflow/status/AFSlayer/antigravity-server/ci.yml?branch=main&style=flat-square)](https://github.com/AFSlayer/antigravity-server/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 
-<img src="docs/assets/demo.gif" width="300" alt="スマホからエージェントにサーバーの状態を聞いている様子" />
+<img src="docs/assets/demo.gif" width="320" alt="モバイルブラウザで動作するAntigravity Server" />
 
 [English](README.md) · [한국어](README.ko.md) · [中文](README.zh-CN.md) · [Português](README.pt-BR.md) · [Español](README.es.md)
 
 </div>
 
-## これは何
+---
 
-Antigravity デスクトップ版には `language_server` というバイナリが入っている。Google と
-通信しているのはこれで、`--standalone` を付けると Antigravity の UI 全体を web アプリと
-しても配信する。listen するのは `127.0.0.1` だけだ。
+## なぜAntigravity Serverなのか？（公式リモートブリッジとの比較）
 
-`agy-remote` はその手前にパスワードを置いて、手元のネットワークに転送する。通り道で JS
-バンドルの文字列もいくつか書き換える。デスクトップ用 IDE をスマホのブラウザで使うと
-引っかかる箇所があるからだ。
+Googleは公式のリモートブリッジ（`antigravity.google.com/r/...`）を提供していますが、クラウド中継を経由し、デスクトップGUIアプリが常に起動している必要があります。
 
-同じことをやっているプロジェクトは自前の UI を作るか、CDP で画面をミラーリングする。
-これは Antigravity 自身の UI を配信する。だからターミナルもファイルツリーも artifacts も
-browser agent も動くし、Google が新機能を出せば勝手に付いてくる。
+`agy-server`はLinuxクラウドインスタンスまたはローカルサーバー上でヘッドレスで動作し、直接的なネットワークアクセスとモバイル向けのランタイムパッチを提供します：
 
-代わりに、minify 済みのバンドルへのパッチは壊れやすい。Antigravity が更新されると当たら
-なくなることがある。`agy-remote` は起動時に全部を検査して、外れたものを知らせる。
+| 機能 | Google公式リモートブリッジ | Antigravity Server (`agy-server`) |
+| :--- | :--- | :--- |
+| **ホスティング環境** | デスクトップGUIアプリが常に起動している必要あり | **ヘッドレスLinux VPS / クラウドVM**（systemdサービス、自動更新） |
+| **接続方式と遅延** | Googleクラウド中継サーバー経由 | **直接接続**（ローカルネットワーク、VPN、HTTPSリバースプロキシ） |
+| **モバイルプロジェクト管理** | プロジェクト`(+)`ボタンなし；下部入力欄での切り替えが必要 | プロジェクトヘッダーに**`(+)`新規会話ボタンを復元** |
+| **会話管理機能** | モバイル画面での会話削除、ピン留め、アーカイブ不可 | **タッチ会話制御**：削除、名前変更、ピン留め、アーカイブを完備 |
+| **メッセージアクション** | ホバー専用のためモバイルでUndo/Copy不可 | メッセージ吹き出しに**Undo（`↶`）およびCopy（`📋`）ボタンを常時表示** |
+| **iOS / PWAキーボード適合** | 下部Safe Areaの余白残存およびフォーカス時の画面揺れ | **0pxキーボード密着**：動的Safe Area縮小とビューポート追従 |
+| **ファイルアップロード** | 1MB RPCテキスト容量制限 | **チャンクストリーミングアップローダー**：大容量ログ、HAR、データを直接転送 |
+| **認証とプライバシー** | GoogleアカウントログインおよびGoogle中継が必須 | パスワード保護（PBKDF2）、セッション管理、総当たり攻撃防御 |
 
-## インストール
+---
 
-```bash
-# macOS、Linux
-curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
-```
+## クイックスタート
 
-```powershell
-# Windows
-irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
-```
+### オプション1: Linuxサーバー / クラウドVPS（推奨）
 
-入れたらそのまま起動する。コントロールパネルが開いて QR コードが出るので、スマホで読み
-取れば入れる。パスワードは打たない。QR には 10 分有効のワンタイムトークンが入っている。
-
-<div align="center">
-<img src="docs/assets/control-panel.png" width="320" alt="コントロールパネル" />
-</div>
-
-Antigravity を先に開く必要はない。起動していなければ `agy-remote` がアプリを立ち上げ、
-リモートコントロールを有効にし、language server を待って、どのポートが UI を配信して
-いるかを調べる。
-
-スマホでは共有 →「ホーム画面に追加」を使うといい。ホーム画面に Antigravity の
-アイコンが並ぶ。
-
-バイナリにコード署名は無いので、ブラウザでアーカイブを落とすと OS が隔離する。macOS は
-右クリック → **開く** → もう一度 **開く**。Windows は **詳細情報** → **実行**。上の
-インストールコマンドは `curl` を使うので隔離属性が付かない。
-
-## サーバーに置く
-
-Linux マシンに置けば、ノートを閉じても Antigravity は動き続ける。安い VPS や無料枠の
-ARM インスタンスで足りる。
+ヘッドレスLinuxインスタンス（Oracle Cloud Free Tier、AWS、DigitalOcean、自宅サーバーなど）で実行：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install.sh | bash
 ```
 
-ドメインとワークスペースのフォルダを聞いて、Google の `storage.googleapis.com` から公式
-ビルドを取得し、165MB の `language_server` だけを抜き出す。このリポジトリが Google の
-バイナリを再配布することはない。あとは systemd unit を書き、Caddy で HTTPS を設定し、
-パスワードを作る。
+インストーラーの動作：
+1. ドメイン（例: `agy.example.com`）とワークスペースのパスを入力します。
+2. Google公式ビルドバケット（`storage.googleapis.com`）から`language_server`バイナリを直接ダウンロードします。（Googleバイナリの再配布は行いません。）
+3. Caddyによる自動HTTPS設定、systemdサービス登録、アクセスパスワード設定を完了します。
 
-同じ web UI なので PC のブラウザからでも使える。見た目も操作もデスクトップ版と変わらない。
-会話もワークスペースも動いているエージェントもサーバー側にあるから、電車でスマホで始めた
-作業をそのままデスクトップで続けられる。インスタンスは一つなので同期という概念が無い。
+#### Googleアカウント認証
+サーバー初回アクセス時：
+- **Web UIから直接ログイン**: ブラウザでアクセス後、**設定（Settings）**メニューからGoogleログインを完了します。
+- **既存トークンのコピー（任意）**: すでにデスクトップ環境でログイン済みの場合は、トークンをコピーして認証をスキップすることも可能です：
+  ```bash
+  scp ~/.gemini/jetski-standalone-oauth-token user@your-server:~/.gemini/
+  ```
 
-一つだけ自動化できない。Antigravity のサインインは `localhost` の OAuth コールバックを
-使うので、リモートのサーバーは受け取れない。デスクトップ版を使っているマシンからトークンを
-コピーする。
+---
 
-```bash
-scp ~/.gemini/jetski-standalone-oauth-token you@your-server:~/.gemini/
-```
+### オプション2: デスクトップコンパニオン（macOS、Windows、Linuxデスクトップ）
 
-トークンが無いときは `agy-remote` がこのコマンドを表示する。
-
-## パッチ一覧
- 
-25個のパッチ。それぞれ[`internal/patches/registry.go`](internal/patches/registry.go)に記載。
-適用状態は`agy-remote doctor`で確認。
-
-| 問題 | パッチ |
-| --- | --- |
-| バンドルが`https://127.0.0.1:<port>`を呼ぶ（スマホからは自分自身になる） | ブラウザのoriginを使用 |
-| 入力途中でEnterを押すと送信される | タッチではEnterで改行、Cmd/Ctrl+Enterで送信 |
-| モデルをタップするとmediumが選択されメニューが閉じる | タップでeffortサブメニューを開く |
-| 最初の返答で「通知を有効にする」バナーが出る | タッチ端末ではスキップ |
-| スタンドアロンでは文字起こしがないのにマイクボタンがある | 非表示にする |
-| モバイルタイトルバーの動かないプロフィールアイコン | 非表示にする |
-| モバイルで`+`をタップしても会話一覧にとどまる | 新しい会話画面に直接遷移しタイトルバーに戻るボタンを統合 |
-| 新規プロジェクトが`/`で始まる | 設定したワークスペースフォルダで開始 |
-| 大容量ファイル（.har、ログ等）でブラウザがフリーズまたは20MB制限エラー | ワークスペースへの非同期ストリーミングアップロードと進捗UI |
-| 非標準拡張子（.har、.jsonl等）の添付拒否 | すべてのファイルタイプを許可しテキスト/データを解析 |
-| アイコンなし、300ミリ秒のタップ遅延 | Antigravityアイコン、即座に反応 |
-| iOSのホームバー重なり＆仮想キーボードで画面が押し出される | Safe Areaインセット＆ビューポート高さ同期 |
-| リモートブラウザからGoogleログインできない | 設定のログインボタンをWeb認証フローに接続 |
-
-素の UI が見たいときは `agy-remote --no-mobile-patches`。
-
-## セキュリティ
-
-入れた人はファイルを読めてコマンドも実行できる。ドキュメント共有より shell を渡すのに
-近い。
-
-- パスワードは PBKDF2-SHA256 を 20 万回。平文はどこにも置かない。
-- セッショントークンは 256 ビットの乱数で、ディスクには hash だけ。`sessions.json` を
-  持ち出されても使えない。
-- IP ごとに 5 分で 5 回失敗まで、その後は最大 30 分まで倍々のロック。正しいパスワードも
-  同じく弾かれる。
-- QR コードと停止ボタンのあるコントロールパネルは別ポートで loopback だけを listen する。
-  外には出さない。
-
-リバースプロキシの後ろでは信頼する peer を指定する。指定しないと forwarded ヘッダは
-無視される。
+ローカルPCで実行中のAntigravityを同一ネットワーク上のスマートフォンに共有：
 
 ```bash
-agy-remote serve --public-url https://agy.example.com --trusted-proxies 127.0.0.1/32
+# macOS & Linux
+curl -fsSL https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.sh | bash
 ```
 
-> [!NOTE]
-> **リバースプロキシや CDN によるアップロードサイズ制限**: `agy-remote` 自体にはファイルサイズの内部制限はありませんが、前段のプロキシや CDN（Nginx の `client_max_body_size` デフォルト 1MB、Cloudflare 無料枠の 100MB 制限など）によって遮断される場合があります。大容量ファイルのアップロードで `413 Request Entity Too Large` が発生した場合は、プロキシ側のリクエストボディ上限設定を緩和してください。
-
-残りは [SECURITY.md](SECURITY.md)。可能なら Tailscale、無理なら HTTPS。
-
-## コマンド
-
-```
-agy-remote                     デスクトップ版をローカルネットワークに共有
-agy-remote serve               サーバーでヘッドレス実行
-agy-remote update [flags]      Antigravity language_server を最新の公式リリースに更新
-agy-remote doctor              全体を点検して問題を出力
-agy-remote config [flags]      オプションを config.json に保存
-agy-remote passwd [password]   パスワードを設定
-agy-remote sessions [revoke]   端末の一覧 / 全ログアウト
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/AFSlayer/antigravity-server/main/scripts/install-desktop.ps1 | iex
 ```
 
-フラグは `agy-remote help` に出る。すべて `AGY_*` の環境変数がある。
+`agy-server`がQRコード付きのローカルコントロールパネルを開きます。同一Wi-Fi上のスマートフォンでQRコードをスキャンすると、パスワード入力なしで接続できます。
 
-## その他
+<div align="center">
+<img src="docs/assets/control-panel.png" width="320" alt="Control Panel" />
+</div>
 
-必要なのは名前がそのまま「Antigravity」のデスクトップ版で、IDE や CLI では動かない。
-`language_server --standalone` を起動できるのがそれだけだからだ。コードが外に出ることは
-ない。プロキシも language server も同じマシンで動く。開発手順、FAQ、詳しいセキュリティは
-[英語の README](README.md) にある。
+---
 
-[Apache-2.0](LICENSE)。Google のプロジェクトではない。[DISCLAIMER.md](DISCLAIMER.md) 参照。
+## モバイルPWA設定（ホーム画面に追加）
+
+Antigravity ServerはPWA（Progressive Web App）規格をサポートしています。モバイルブラウザで「ホーム画面に追加」すると、**アドレスバーやツールバーのない全画面スタンドアロンアプリ**として起動します：
+
+- **iOS (Safari)**: 下部の**共有ボタン（`⎋`）**をタップ → **「ホーム画面に追加」**を選択
+- **Android (Chrome)**: 右上の**メニュー（`⋮`）**をタップ → **「アプリをインストール」**または**「ホーム画面に追加」**を選択
+
+> [!TIP]
+> ホーム画面アイコンから起動すると、仮想キーボード起動時の画面揺れを防ぎ、**0pxキーボード密着パッチ**が完璧に動作します。
+
+---
+
+## 主な機能
+
+### ⚡ モバイル特化UXパッチ
+- **タッチ操作アクション**: メッセージ吹き出しにUndo（`↶`）およびCopy（`📋`）ボタンを常時表示。
+- **完全な会話管理**: タイトルバーメニューからの会話削除、リストメニューからのピン留め・アーカイブに対応。
+- **正確な仮想キーボード追従**: キーボード表示時にSafe Area余白を0pxに縮小し、キーボード上部にジャストフィット。
+
+---
+
+### 📁 大容量ファイルチャンクストリーミングアップロード
+公式Antigravityの1MB RPC制限を解除し、大容量ログやデータセットをワークスペースへ直接ストリーミング転送します：
+
+<div align="center">
+<img src="docs/assets/upload.gif" width="560" alt="大容量ファイルストリーミングアップローダーデモ" />
+</div>
+
+---
+
+### 🖥️ デスクトップ＆タブレットWebインターフェース
+スマートフォンだけでなく、ノートPCやデスクトップブラウザからも快適に利用できます：
+
+<div align="center">
+<img src="docs/assets/desktop.png" width="700" alt="デスクトップブラウザで動作するAntigravity Web UI" />
+</div>
+
+---
+
+### 🔄 無停止自動更新（Auto-Updater）
+ヘッドレスLinuxサーバーにおいて、`agy-server`はバックグラウンド自動更新サービスを提供します：
+- Google公式リリースバケットを毎日確認し、新しい`language_server`バージョンを検出。
+- コアバイナリを無停止のアトミック方式で安全に置換。
+- 手動更新チェック＆実行: `agy-server update`
+
+---
+
+## 本番リバースプロキシ設定（Caddy / Nginx）
+
+エージェントのリアルタイムストリーミング応答（SSE）およびWebSocket通信、大容量アップロードのため、プロキシの**バッファリング無効化**と**WebSocketアップグレード**設定が必要です：
+
+### Caddy
+```caddyfile
+agy.example.com {
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:8765 {
+        flush_interval -1
+    }
+}
+```
+
+### Nginx
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name agy.example.com;
+
+    # 大容量チャンクアップロードを許可
+    client_max_body_size 0;
+
+    location / {
+        proxy_pass http://127.0.0.1:8765;
+        proxy_http_version 1.1;
+
+        # WebSocketサポート
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # リアルタイムトークンストリーミング用のバッファリング無効化（必須）
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 86400s;
+
+        # クライアント実IPの転送
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+> [!IMPORTANT]
+> リバースプロキシの背後で実行する場合、総当たり攻撃防御（IPロックアウト）がクライアントの実IPを正しく識別できるように `--trusted-proxies 127.0.0.1/32`（または環境変数 `AGY_TRUSTED_PROXIES=127.0.0.1/32`）を設定してください。
+
+---
+
+## 動作原理
+
+Antigravity内部には`language_server`という独立バイナリが含まれています。`--standalone`フラグで起動すると、ローカル`127.0.0.1`にWebインターフェースを提供します。
+
+`agy-server`はこのバイナリの前段でリバースプロキシとして動作します：
+
+```
+  スマートフォン / タブレット / PC ブラウザ
+                │
+                ▼ HTTPS (Port 443 / 8765)
+  ┌──────────────────────────────────────────────┐
+  │ agy-server (リバースプロキシ & 認証)         │
+  │  - PBKDF2セッション管理 & レートリミット     │
+  │  - チャンクストリーミングアップローダー      │
+  │  - リアルタイムWebバンドルパッチ適用         │
+  └──────────────────────┬───────────────────────┘
+                         │ localhost
+                         ▼
+  ┌──────────────────────────────────────────────┐
+  │ language_server --standalone                 │
+  │  - 公式Antigravityコア & エージェントエンジン│
+  │  - ターミナル、ファイルツリー、Composer      │
+  └──────────────────────┬───────────────────────┘
+                         │ gRPC
+                         ▼
+                Google CloudCode API
+```
+
+---
+
+## CLIコマンド
+
+```
+agy-server                      デスクトップコンパニオンモードで起動（ローカルNW）
+agy-server serve                ヘッドレスサーバーデーモンとして実行
+agy-server update               Google公式最新language_serverの確認と更新
+agy-server doctor               パッチ整合性およびシステム状態の診断
+agy-server passwd [password]    Webアクセスパスワードの設定・変更
+agy-server sessions [revoke]    アクティブセッションの確認・全ログアウト
+agy-server config [flags]       config.json設定の管理
+```
+
+---
+
+## ライセンス
+
+[Apache-2.0](LICENSE). Not affiliated with or endorsed by Google. See [DISCLAIMER.md](DISCLAIMER.md).
